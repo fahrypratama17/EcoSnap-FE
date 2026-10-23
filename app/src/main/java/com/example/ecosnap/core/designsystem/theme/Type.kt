@@ -11,60 +11,60 @@ import com.example.ecosnap.R
 
 val PlusJakartaSans = FontFamily(
     Font(
-        R.font.PlusJakartaSans_ExtraLight,
+        R.font.plus_jakarta_sans_extra_light,
         FontWeight.ExtraLight
     ),
     Font(
-        R.font.PlusJakartaSans_ExtraLightItalic,
+        R.font.plus_jakarta_sans_extra_light_italic,
         FontWeight.ExtraLight,
         FontStyle.Italic
     ),
     Font(
-        R.font.PlusJakartaSans_Light,
+        R.font.plus_jakarta_sans_light,
         FontWeight.Light
     ),
     Font(
-        R.font.PlusJakartaSans_LightItalic,
+        R.font.plus_jakarta_sans_light_italic,
         FontWeight.Light,
         FontStyle.Italic,
     ),
     Font(
-        R.font.PlusJakartaSans_Regular,
+        R.font.plus_jakarta_sans_regular,
         FontWeight.Normal
     ),
     Font(
-        R.font.PlusJakartaSans_Medium,
+        R.font.plus_jakarta_sans_medium,
         FontWeight.Medium
     ),
     Font(
-        R.font.PlusJakartaSans_MediumItalic,
+        R.font.plus_jakarta_sans_medium_italic,
         FontWeight.Medium,
         FontStyle.Italic
     ),
     Font(
-        R.font.PlusJakartaSans_SemiBold,
+        R.font.plus_jakarta_sans_semi_bold,
         FontWeight.SemiBold
     ),
     Font(
-        R.font.PlusJakartaSans_SemiBoldItalic,
+        R.font.plus_jakarta_sans_semi_bold_italic,
         FontWeight.SemiBold,
         FontStyle.Italic
     ),
     Font(
-        R.font.PlusJakartaSans_Bold,
+        R.font.plus_jakarta_sans_bold,
         FontWeight.Bold
     ),
     Font(
-        R.font.PlusJakartaSans_BoldItalic,
+        R.font.plus_jakarta_sans_bold_italic,
         FontWeight.Bold,
         FontStyle.Italic
     ),
     Font(
-        R.font.PlusJakartaSans_ExtraBold,
+        R.font.plus_jakarta_sans_extra_bold,
         FontWeight.ExtraBold
     ),
     Font(
-        R.font.PlusJakartaSans_ExtraBoldItalic,
+        R.font.plus_jakarta_sans_extra_bold_italic,
         FontWeight.ExtraBold,
         FontStyle.Italic
     )
