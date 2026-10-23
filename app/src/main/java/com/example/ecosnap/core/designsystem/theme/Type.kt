@@ -1,4 +1,4 @@
-package com.example.ecosnap.ui.theme
+package com.example.ecosnap.core.designsystem.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

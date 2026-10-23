@@ -1,3 +1,5 @@
+package com.example.ecosnap.core.designsystem.theme
+
 import androidx.compose.ui.unit.dp
 
 object EcoSpacing {

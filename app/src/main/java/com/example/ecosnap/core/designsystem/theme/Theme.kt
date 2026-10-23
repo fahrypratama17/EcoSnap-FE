@@ -1,6 +1,5 @@
-package com.example.ecosnap.ui.theme
+package com.example.ecosnap.core.designsystem.theme
 
-import EcoColor
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme

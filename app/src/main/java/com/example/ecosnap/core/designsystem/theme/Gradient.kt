@@ -1,6 +1,5 @@
 package com.example.ecosnap.core.designsystem.theme
 
-import EcoColor
 import androidx.compose.ui.graphics.Brush
 
 object EcoGradient {
