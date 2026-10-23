@@ -1,6 +1,7 @@
 import androidx.compose.ui.graphics.Color
 
 object EcoColor {
+  // Pallete
   var Green100 = Color(0xFFD8F3DC)
   var Green200 = Color(0xFFB7E4C7)
   var Green300 = Color(0xFF95D5B2)
@@ -11,7 +12,14 @@ object EcoColor {
   var Green800 = Color(0xFF1B4332)
   var Green900 = Color(0xFF081C15)
 
+  val GreenSoft = Color(0xFFE0E6D5)
+
+  // Text
   var TextBrand = Color(0xFF2E7D32)
   var TextError = Color(0XFFB64D44)
+
+  // Neutral
   var White = Color(0XFFFFFFFF)
+
+
 }
