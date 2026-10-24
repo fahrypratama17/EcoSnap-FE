@@ -11,7 +11,7 @@ data class OnboardingPage(
   val icon: ImageVector
 )
 
-val onboardingPage = listOf(
+val onboardingPages = listOf(
   OnboardingPage(
     title = "Kenali Sampahmu",
     description = "Foto sampahmu, kenali jenisnya dengan AI, dan temukan cara menanganinya.",
