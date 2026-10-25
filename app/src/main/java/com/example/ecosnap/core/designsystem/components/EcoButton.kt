@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -30,6 +31,8 @@ fun EcoButton (
   height: Dp = 48.dp,
   shape: Shape = EcoShape.large,
   enabled: Boolean = true,
+  containerColor: Color = EcoColor.Green800,
+  contentColor: Color = EcoColor.White,
 ) {
   Button(
     onClick = onClick,
@@ -37,8 +40,8 @@ fun EcoButton (
     enabled = enabled,
     shape = shape,
     colors = ButtonDefaults.buttonColors(
-      containerColor = EcoColor.Green800,
-      contentColor = EcoColor.White
+      containerColor = containerColor,
+      contentColor = contentColor
     ),
     contentPadding = PaddingValues(0.dp)
   ) {
