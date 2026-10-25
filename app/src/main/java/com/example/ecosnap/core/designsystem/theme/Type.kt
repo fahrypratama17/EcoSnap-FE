@@ -74,6 +74,13 @@ val PlusJakartaSans = FontFamily(
 val ecoTypography = Typography(
     headlineLarge = TextStyle(
         fontFamily = PlusJakartaSans,
+        fontWeight = FontWeight.ExtraBold,
+        fontSize = 32.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.5.sp
+    ),
+    headlineMedium = TextStyle(
+        fontFamily = PlusJakartaSans,
         fontWeight = FontWeight.Bold,
         fontSize = 24.sp,
         lineHeight = 24.sp,
