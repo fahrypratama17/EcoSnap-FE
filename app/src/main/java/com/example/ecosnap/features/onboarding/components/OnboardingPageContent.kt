@@ -25,6 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ecosnap.core.designsystem.theme.EcoColor
+import com.example.ecosnap.core.designsystem.theme.EcoSpacing
 import com.example.ecosnap.features.onboarding.model.OnboardingPage
 
 @Composable
@@ -81,36 +82,41 @@ fun OnboardingPageContent(
           }
         }
       }
+
+    }
+    Column(
+      modifier = Modifier
+        .fillMaxWidth()
+        .padding(bottom = EcoSpacing.sm),
+      horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+      Text(
+        text = page.title,
+        style = MaterialTheme.typography.titleLarge.copy(
+          fontSize = 20.sp,
+          lineHeight = 26.sp,
+          letterSpacing = 0.sp
+        ),
+        color = EcoColor.Green900,
+        textAlign = TextAlign.Center
+      )
+
+      Spacer(Modifier.height(12.dp))
+
+      Text(
+        text = page.description,
+        style = MaterialTheme.typography.bodyMedium.copy(
+          fontSize = 12.sp,
+          lineHeight = 18.sp,
+          letterSpacing = 0.sp
+        ),
+        color = EcoColor.Green700,
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(horizontal = 12.dp)
+          .heightIn(min = 58.dp)
+      )
     }
   }
-
-  Spacer(Modifier.height(20.dp))
-
-  Text(
-    text = page.title,
-    style = MaterialTheme.typography.titleLarge.copy(
-      fontSize = 20.sp,
-      lineHeight = 26.sp,
-      letterSpacing = 0.sp
-    ),
-    color = EcoColor.Green900,
-    textAlign = TextAlign.Center
-  )
-
-  Spacer(Modifier.height(8.dp))
-
-  Text(
-    text = page.description,
-    style = MaterialTheme.typography.bodyMedium.copy(
-      fontSize = 12.sp,
-      lineHeight = 18.sp,
-      letterSpacing = 0.sp
-    ),
-    color = EcoColor.Green700,
-    textAlign = TextAlign.Center,
-    modifier = Modifier
-      .fillMaxWidth()
-      .padding(horizontal = 12.dp)
-      .heightIn(min = 58.dp)
-  )
 }

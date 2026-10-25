@@ -17,13 +17,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.example.ecosnap.core.designsystem.theme.EcoColor
 import com.example.ecosnap.core.designsystem.theme.EcoShape
 
 @Composable
 fun EcoButton (
   text: String,
   onClick: () -> Unit,
-  modifier: Modifier = Modifier.fillMaxWidth(),
+  modifier: Modifier = Modifier,
   startIcon: (@Composable () -> Unit)? = null,
   endIcon: (@Composable () -> Unit)? = null,
   height: Dp = 48.dp,
@@ -36,8 +37,8 @@ fun EcoButton (
     enabled = enabled,
     shape = shape,
     colors = ButtonDefaults.buttonColors(
-      containerColor = MaterialTheme.colorScheme.primary,
-      contentColor = MaterialTheme.colorScheme.onPrimary
+      containerColor = EcoColor.Green800,
+      contentColor = EcoColor.White
     ),
     contentPadding = PaddingValues(0.dp)
   ) {

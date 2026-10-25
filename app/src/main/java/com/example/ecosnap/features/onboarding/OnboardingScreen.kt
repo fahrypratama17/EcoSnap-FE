@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -38,6 +39,7 @@ import com.example.ecosnap.core.designsystem.theme.EcoColor
 import com.example.ecosnap.core.designsystem.theme.EcoGradient
 import com.example.ecosnap.core.designsystem.theme.EcoSpacing
 import com.example.ecosnap.core.designsystem.theme.EcosnapTheme
+import com.example.ecosnap.core.designsystem.theme.ecoTypography
 import com.example.ecosnap.features.onboarding.components.OnboardingPageContent
 import com.example.ecosnap.features.onboarding.components.OnboardingPageIndicator
 import com.example.ecosnap.features.onboarding.model.onboardingPages
@@ -122,12 +124,13 @@ fun OnboardingScreen(
           TextButton(
             onClick = OnSkip,
             colors = ButtonDefaults.textButtonColors(
-              contentColor = EcoColor.Green700
+              contentColor = EcoColor.Green700,
+              containerColor = Color.Transparent
             )
           ) {
             Text(
               text = "Lewati",
-              style = MaterialTheme.typography.labelLarge
+              style = ecoTypography.labelLarge
             )
           }
         }

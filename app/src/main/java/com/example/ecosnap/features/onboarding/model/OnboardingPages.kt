@@ -14,17 +14,17 @@ data class OnboardingPage(
 val onboardingPages = listOf(
   OnboardingPage(
     title = "Kenali Sampahmu",
-    description = "Foto sampahmu, kenali jenisnya dengan AI, dan temukan cara menanganinya.",
+    description = "Foto sampah dan temukan cara Foto sampahmu, kenali jenisnya dengan AI, dan temukan cara menanganinya.",
     icon = Lucide.ScanLine
   ),
   OnboardingPage(
-    title = "Temukan Mitra Terdekat",
-    description = "Temukan lokasi pengumpulan sampah di sekitarmu dan setor sesuai jenis material.",
+    title = "Cari Mitra",
+    description = "Temukan tempat penyetoran terdekat yang menerima jenis sampahmu.",
     icon = Lucide.MapPin
   ),
   OnboardingPage(
-    title = "Kumpulkan Poin",
-    description = "Setor sampah, kumpulkan poin, dan tukarkan dengan berbagai hadiah menarik.",
+    title = "Dapatkan Poin",
+    description = "Setorkan sampah, scan QR dari mitra, lalu tukarkan poin dengan reward.",
     icon = Lucide.ScanLine
   )
 )
