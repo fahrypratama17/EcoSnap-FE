@@ -3,22 +3,31 @@ package com.example.ecosnap.features.auth
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.composables.icons.lucide.ArrowRight
+import com.composables.icons.lucide.Lucide
+import com.example.ecosnap.core.designsystem.components.EcoButton
 import com.example.ecosnap.core.designsystem.components.EcoDropdownField
 import com.example.ecosnap.core.designsystem.components.EcoPasswordField
 import com.example.ecosnap.core.designsystem.components.EcoTextField
 import com.example.ecosnap.core.designsystem.theme.EcoColor
+import com.example.ecosnap.features.auth.components.AuthDivider
 import com.example.ecosnap.features.auth.components.AuthLayout
 import com.example.ecosnap.features.auth.components.AuthRoleSelector
 import com.example.ecosnap.features.auth.model.AuthRole
@@ -188,6 +197,71 @@ fun RegisterScreen(
 
     Spacer(Modifier.height(24.dp))
 
+    EcoButton(
+      text = if (role == AuthRole.USER) {
+        "Daftar sebagai Pengguna"
+      } else {
+        "Daftar sebagai Mitra"
+      },
+      containerColor = EcoColor.Green800,
+      contentColor = EcoColor.White,
+      endIcon = {
+        Icon(
+          imageVector = Lucide.ArrowRight,
+          contentDescription = null,
+          modifier = Modifier.size(18.dp)
+        )
+      },
+      onClick = {
+        submitted = true
 
+        val commonValid =
+          fullName.isNotBlank() && isValidPhone(email) && isValidPhone(phone) && password.length >= 8 && password == confirmPassword
+
+        val businessValid = role == AuthRole.USER || (businessName.isNotBlank() && businessCategory.isNotBlank())
+
+        if (commonValid && businessValid) {
+          onRegister(
+            RegistrationData(
+              role = role,
+              fullName = fullName.trim(),
+              email = email.trim(),
+              phone = phone.trim(),
+              password = password,
+              businessName = if (role == AuthRole.PARTNER) businessName.trim() else null,
+              businessCategory = if (role == AuthRole.PARTNER) businessCategory else null
+            )
+          )
+        }
+      }
+    )
+
+    Spacer(Modifier.height(8.dp))
+
+    Row(
+      modifier = Modifier.fillMaxWidth(),
+      horizontalArrangement = Arrangement.Center,
+      verticalAlignment = Alignment.CenterVertically
+    ) {
+      Text(
+        text = "Sudah punya akun?",
+        style = MaterialTheme.typography.bodyMedium,
+        color = EcoColor.Green900
+      )
+
+      TextButton(
+        onClick = onLoginClick
+      ) {
+        Text(
+          text = "Masuk",
+          color = EcoColor.Green700,
+          style = MaterialTheme.typography.labelLarge
+        )
+      }
+    }
+
+    Spacer(Modifier.height(12.dp))
+
+    AuthDivider()
   }
 }
