@@ -16,6 +16,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.example.ecosnap.features.auth.LoginScreen
+import com.example.ecosnap.features.auth.RegisterScreen
 
 fun NavGraphBuilder.authNavGraph(
   navController: NavHostController
@@ -68,7 +69,38 @@ fun NavGraphBuilder.authNavGraph(
       )
     }
 
+    composable(Routes.REGISTER) {
+      RegisterScreen(
+        onBack = {
+          navController.popBackStack()
+        },
+
+        onLoginClick = {
+          navController.popBackStack()
+        },
+
+        onHelp = {
+          navController.navigate(
+            Routes.HELP
+          )
+        },
+
+        onRegister = { _ ->
+          navController.popBackStack()
+        }
+      )
+    }
+
     composable(Routes.FORGOT_PASSWORD) {
+      AuthPlaceholderScreen(
+        title = "Hubungi Kami",
+        onBack = {
+          navController.popBackStack()
+        }
+      )
+    }
+
+    composable(Routes.HELP) {
       AuthPlaceholderScreen(
         title = "Hubungi Kami",
         onBack = {
