@@ -48,7 +48,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun OnboardingScreen(
   onFinished: () -> Unit,
-  OnSkip: () -> Unit = onFinished,
+  onSkip: () -> Unit = onFinished,
   modifier: Modifier = Modifier
 ) {
   val pages = onboardingPages
@@ -122,7 +122,7 @@ fun OnboardingScreen(
 
         if (!isLastPage) {
           TextButton(
-            onClick = OnSkip,
+            onClick = onSkip,
             colors = ButtonDefaults.textButtonColors(
               contentColor = EcoColor.Green700,
               containerColor = Color.Transparent
@@ -191,7 +191,7 @@ private fun OnboardingPreview() {
   ) {
     OnboardingScreen(
       onFinished = {},
-      OnSkip = {},
+      onSkip = {},
     )
   }
 }
