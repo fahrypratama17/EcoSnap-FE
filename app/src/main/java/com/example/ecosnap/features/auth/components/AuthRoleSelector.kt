@@ -55,16 +55,17 @@ fun AuthRoleSelector(
         onRoleSelected(AuthRole.USER)
       },
       modifier = Modifier.weight(1f)
-    ) }
-
-    AuthRoleCard(
-      role = AuthRole.PARTNER,
-      selected = selectedRole == AuthRole.PARTNER,
-      onClick = {
-        onRoleSelected(AuthRole.PARTNER)
-      },
-      modifier = Modifier.weight(1f)
     )
+
+      AuthRoleCard(
+        role = AuthRole.PARTNER,
+        selected = selectedRole == AuthRole.PARTNER,
+        onClick = {
+          onRoleSelected(AuthRole.PARTNER)
+        },
+        modifier = Modifier.weight(1f)
+      )
+    }
   }
 }
 
