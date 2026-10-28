@@ -57,6 +57,12 @@ fun EcoSnapNavHost(
       )
     }
 
-    authNavGraph
+    authNavGraph(
+      navController = navController
+    )
+
+    mainNavGraph(
+      navController = navController
+    )
   }
 }
