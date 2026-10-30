@@ -36,7 +36,7 @@ import java.util.Locale
 @Composable
 fun HomePointsCard(
   points: Int,
-  monthlyDeposits: () -> Unit,
+  monthlyDeposits: Int,
   onRedeem: () -> Unit,
   onSqanQr: () -> Unit,
   onFindPartner: () -> Unit,
