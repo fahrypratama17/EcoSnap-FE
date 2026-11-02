@@ -14,6 +14,7 @@ object Routes {
 
   const val MAIN_GRAPH = "main_graph"
   const val HOME = "home"
+  const val MAP = "map"
   const val SCAN = "scan"
   const val POINTS = "points"
   const val GAMES = "games"
