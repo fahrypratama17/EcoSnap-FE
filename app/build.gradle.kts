@@ -47,6 +47,8 @@ dependencies {
     implementation(libs.icons.lucide.cmp)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.android.sdk)
+    implementation(libs.okhttp)
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
