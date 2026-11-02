@@ -3,6 +3,7 @@ package com.example.ecosnap.navigation
 object Routes {
   const val SPLASH = "splash"
   const val ONBOARDING = "onboarding"
+
   const val AUTH_GRAPH = "auth_graph"
   const val LOGIN = "login"
   const val REGISTER = "register"
@@ -13,4 +14,14 @@ object Routes {
 
   const val MAIN_GRAPH = "main_graph"
   const val HOME = "home"
+  const val MAP = "map"
+  const val SCAN = "scan"
+  const val POINTS = "points"
+  const val GAMES = "games"
+
+  const val NOTIFICATION = "notification"
+  const val PROFILE = "profile"
+  const val HISTORY = "history"
+  const val MISSIONS = "missions"
+  const val PARTNER_DETAIL = "partner_detail"
 }
