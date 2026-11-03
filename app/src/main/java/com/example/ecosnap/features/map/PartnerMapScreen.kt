@@ -274,13 +274,3 @@ fun PartnerMapScreen(
     }
   }
 }
-
-
-
-
-
-
-
-
-
-
