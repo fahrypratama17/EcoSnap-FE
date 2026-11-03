@@ -13,6 +13,7 @@ object Routes {
   const val HELP = "help"
 
   const val MAIN_GRAPH = "main_graph"
+
   const val HOME = "home"
   const val MAP = "map"
   const val SCAN = "scan"
@@ -24,4 +25,6 @@ object Routes {
   const val HISTORY = "history"
   const val MISSIONS = "missions"
   const val PARTNER_DETAIL = "partner_detail"
+
+  fun partnerDetail(id: String) = "$PARTNER_DETAIL/$id"
 }
