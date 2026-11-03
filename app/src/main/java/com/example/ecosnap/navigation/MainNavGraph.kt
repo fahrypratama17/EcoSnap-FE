@@ -183,7 +183,6 @@ fun NavGraphBuilder.mainNavGraph(
                 context.startActivity(geoIntent)
               } catch (_: ActivityNotFoundException) {
 
-                // Fallback: OpenStreetMap website
                 val osmUrl =
                   "https://www.openstreetmap.org/" +
                           "?mlat=$lat&mlon=$lon" +
@@ -210,7 +209,6 @@ fun NavGraphBuilder.mainNavGraph(
     }
 
     listOf(
-      Routes.MAP to "Peta Mitra",
       Routes.SCAN to "Scan Sampah",
       Routes.POINTS to "Poin & Reward",
       Routes.GAMES to "Games",
