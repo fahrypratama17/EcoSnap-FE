@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -289,6 +290,99 @@ fun PartnerInformationCard(
       icon = Lucide.Phone,
       title = "Kontak Mitra",
       description = partner.phone
+    )
+  }
+}
+
+@Composable
+private fun DepositStep(
+  number: Int,
+  title: String,
+  description: String
+) {
+  Row(
+    modifier = Modifier.fillMaxWidth(),
+    verticalAlignment = Alignment.Top
+  ) {
+    Box(
+      modifier = Modifier
+        .size(24.dp)
+        .background(
+          EcoColor.Green100,
+          CircleShape
+        ),
+      contentAlignment = Alignment.Center
+    ) {
+      Text(
+        text = number.toString(),
+        style = MaterialTheme.typography.labelSmall,
+        color = EcoColor.Green800
+      )
+    }
+
+    Spacer(Modifier.width(10.dp))
+
+    Column{
+      Text(
+        text = title,
+        style = MaterialTheme.typography.labelLarge,
+        color = EcoColor.Green900
+      )
+
+      Spacer(Modifier.height(3.dp))
+
+      Text(
+        text = description,
+        style = MaterialTheme.typography.bodyMedium,
+        color = EcoColor.Green700
+      )
+    }
+  }
+}
+
+@Composable
+fun PartnerDepositsStepsCard(
+  modifier: Modifier = Modifier
+) {
+  EcoCard(
+    modifier = modifier.fillMaxWidth()
+  ) {
+    Text(
+      text = "Cara Menyetorkan",
+      style = MaterialTheme.typography.titleMedium,
+      color = EcoColor.Green900
+    )
+
+    Spacer(Modifier.height(16.dp))
+
+    DepositStep(
+      number = 1,
+      title = "Pilah sampah",
+      description = "Pisahkan sampah berdasarkan jenis material."
+    )
+
+    Spacer(Modifier.height(14.dp))
+
+    DepositStep(
+      number = 2,
+      title = "Datang ke mitra",
+      description = "Bawa material ke lokasi mitra pada jam layanan"
+    )
+
+    Spacer(Modifier.height(14.dp))
+
+    DepositStep(
+      number = 3,
+      title = "Timbang sampah",
+      description = "Mitra memeriksa dan memasukkan berat hasil penimbangan"
+    )
+
+    Spacer(Modifier.height(14.dp))
+
+    DepositStep(
+      number = 4,
+      title = "Scan QR transaksi",
+      description = "Pindai QR dari mitra menggunakan EcoSnap untuk validasi transaksi."
     )
   }
 }
