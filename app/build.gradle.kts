@@ -49,6 +49,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.android.sdk)
     implementation(libs.okhttp)
+    implementation(libs.gson.v2132)
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
