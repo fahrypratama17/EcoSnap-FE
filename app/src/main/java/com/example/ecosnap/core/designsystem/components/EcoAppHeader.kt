@@ -28,7 +28,7 @@ import com.example.ecosnap.core.designsystem.theme.EcoGradient
 
 @Composable
 fun EcoAppHeader(
-  onNotification: () -> Unit,
+  onNotifications: () -> Unit,
   onProfile: () -> Unit,
   modifier: Modifier = Modifier
 ) {
@@ -73,7 +73,7 @@ fun EcoAppHeader(
     Spacer(Modifier.weight(1f))
 
     IconButton(
-      onClick = onNotification,
+      onClick = onNotifications,
       modifier = Modifier
         .size(42.dp)
         .background(
