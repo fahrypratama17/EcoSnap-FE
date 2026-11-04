@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import com.example.ecosnap.core.designsystem.theme.EcoColor
 import com.example.ecosnap.core.designsystem.theme.EcosnapTheme
 import com.example.ecosnap.features.home.components.HomeHeader
+import com.example.ecosnap.features.home.components.HomeNewsCard
 import com.example.ecosnap.features.home.components.HomePartnerCard
 import com.example.ecosnap.features.home.components.HomeScanPromoCard
 import com.example.ecosnap.features.home.components.HomeSectionHeader
@@ -40,6 +41,11 @@ fun HomeScreen(
   onSeeALlMission: () -> Unit,
   onSeeMap: () -> Unit,
   onPartnerClick: () -> Unit,
+  newsTitle: String,
+  newsSummary: String,
+  newsReadingMinutes: Int,
+  onNewsClick: () -> Unit,
+  onSeeAllArticles: () -> Unit,
   modifier: Modifier = Modifier,
   @DrawableRes promoIllustrationRes: Int? = null
 ) {
@@ -139,10 +145,26 @@ fun HomeScreen(
       }
 
       item {
+        HomeSectionHeader(
+          title = "Berita & Edukasi",
+          actionText = "Lihat Semua",
+          onAction = onSeeALlMission
+        )
+      }
+
+      item {
+        HomeNewsCard(
+          title = newsTitle,
+          summary = newsSummary,
+          readingMinutes = newsReadingMinutes,
+          onClick = onNewsClick
+        )
+      }
+
+      item {
         HomeTipCard(
           title = "Bilas, keringkan, lalu pilah.",
-          description = "Kemasan bersih lebih mudah " +
-                  "didaur ulang. Mulai dari botolmu hari ini."
+          description = "Kemasan bersih lebih mudah didaur ulang. Mulai dari botolmu hari ini.",
         )
       }
     }
@@ -155,6 +177,7 @@ fun HomeScreen(
   widthDp = 360,
   heightDp = 780
 )
+
 @Composable
 private fun HomeScreenPreview() {
   EcosnapTheme(
@@ -172,7 +195,12 @@ private fun HomeScreenPreview() {
       onScanWaste = {},
       onSeeALlMission = {},
       onSeeMap = {},
-      onPartnerClick = {}
+      onPartnerClick = {},
+      newsTitle = "Kabar Hijau: Mengenal Peran Bank Sampah",
+      newsSummary = "Kenali bagaimana bank sampah membantu pengumpulan material terpilah di lingkungan sekitar.",
+      newsReadingMinutes = 3,
+      onNewsClick = {},
+      onSeeAllArticles = {}
     )
   }
 }

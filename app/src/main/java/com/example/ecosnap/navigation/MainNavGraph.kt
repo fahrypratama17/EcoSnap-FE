@@ -31,6 +31,9 @@ import com.composables.icons.lucide.ScanLine
 import com.example.ecosnap.core.designsystem.components.EcoBottomItem
 import com.example.ecosnap.core.designsystem.components.EcoBottomNavigation
 import com.example.ecosnap.core.designsystem.components.EcoButton
+import com.example.ecosnap.features.articles.ArticleDetailScreen
+import com.example.ecosnap.features.articles.ArticleListScreen
+import com.example.ecosnap.features.articles.data.LocalArticles
 import com.example.ecosnap.features.home.HomeScreen
 import com.example.ecosnap.features.home.model.HomeUiState
 import com.example.ecosnap.features.map.PartnerDetailScreen
@@ -73,6 +76,8 @@ fun NavGraphBuilder.mainNavGraph(
     startDestination = Routes.HOME
   ) {
     composable(Routes.HOME) {
+      val news = LocalArticles.latestNews
+
       MainTabScaffold(
         navController = navController,
         selectedRoute = Routes.HOME
@@ -118,6 +123,18 @@ fun NavGraphBuilder.mainNavGraph(
 
           onPartnerClick = {
             navController.navigate(Routes.partnerDetail("tunas"))
+          },
+
+          newsTitle = news.title,
+          newsSummary = news.summary,
+          newsReadingMinutes = news.readingMinutes,
+
+          onNewsClick = {
+            navController.navigate(Routes.articleDetail(news.id))
+          },
+
+          onSeeAllArticles = {
+            navController.navigate(Routes.ARTICLES)
           }
         )
       }
@@ -208,6 +225,61 @@ fun NavGraphBuilder.mainNavGraph(
       }
     }
 
+    composable(Routes.ARTICLES) {
+      MainTabScaffold(
+        navController = navController,
+        selectedRoute = Routes.HOME
+      ) {
+        ArticleListScreen(
+          onBack = { navController.popBackStack() },
+
+          onArticleClick = { articleId ->
+            navController.navigate(
+              Routes.articleDetail(articleId)
+            )
+          },
+
+          onOpenScan = { navController.navigate(Routes.SCAN) },
+
+          onNotifications = { navController.navigate(Routes.NOTIFICATION) },
+
+          onProfile = { navController.navigate(Routes.PROFILE) },
+        )
+      }
+    }
+
+    composable(route = "${Routes.ARTICLE_DETAIL}/{articleId}") {
+      backStackEntry ->
+
+      val articleId = backStackEntry.arguments?.getString("articleId").orEmpty()
+
+      val article = LocalArticles.findById(articleId)
+
+      MainTabScaffold(
+        navController = navController,
+        selectedRoute = Routes.HOME
+      ) {
+        if (article != null) {
+          ArticleDetailScreen(
+            article = article,
+
+            onBack = { navController.popBackStack() },
+
+            onFinished = { navController.popBackStack() },
+
+            onNotifications = { navController.navigate(Routes.NOTIFICATION) },
+
+            onProfile = { navController.navigate(Routes.PROFILE) }
+          )
+        } else {
+          MainPlaceholder(
+            title =  "Artikel tidak ditemukan",
+            onBack = { navController.popBackStack() }
+          )
+        }
+      }
+    }
+
     listOf(
       Routes.SCAN to "Scan Sampah",
       Routes.POINTS to "Poin & Reward",
@@ -230,7 +302,6 @@ fun NavGraphBuilder.mainNavGraph(
       Routes.PROFILE to "Profil",
       Routes.HISTORY to "Riwayat Setoran",
       Routes.MISSIONS to "Semua Misi",
-      Routes.PARTNER_DETAIL to "Detail Mitra",
     ).forEach { (route, title) ->
       composable(route) {
         MainPlaceholder(
