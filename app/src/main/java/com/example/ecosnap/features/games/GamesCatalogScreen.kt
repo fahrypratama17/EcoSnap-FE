@@ -33,7 +33,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.composables.icons.lucide.ArrowLeft
@@ -44,7 +43,6 @@ import com.composables.icons.lucide.Search
 import com.example.ecosnap.core.designsystem.components.EcoAppHeader
 import com.example.ecosnap.core.designsystem.components.EcoCard
 import com.example.ecosnap.core.designsystem.theme.EcoColor
-import com.example.ecosnap.core.designsystem.theme.EcosnapTheme
 import com.example.ecosnap.features.games.components.GamesSectionHeader
 import com.example.ecosnap.features.games.components.MiniGameCard
 import com.example.ecosnap.features.games.data.LocalGames
@@ -259,35 +257,3 @@ fun GamesCatalogScreen(
     }
   }
 }
-
-@Preview(
-  showBackground = true,
-  widthDp = 360,
-  heightDp = 780
-)
-@Composable
-private fun GamesCatalogPreview() {
-  EcosnapTheme(
-    darkTheme = false,
-    dynamicColor = false
-  ) {
-    GamesCatalogScreen(
-      onBack = {},
-      onGameDetail = {},
-      onNotifications = {},
-      onProfile = {}
-    )
-  }
-}
-
-
-
-
-
-
-
-
-
-
-
-
