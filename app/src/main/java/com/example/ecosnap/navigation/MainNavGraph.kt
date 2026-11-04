@@ -31,6 +31,7 @@ import com.composables.icons.lucide.ScanLine
 import com.example.ecosnap.core.designsystem.components.EcoBottomItem
 import com.example.ecosnap.core.designsystem.components.EcoBottomNavigation
 import com.example.ecosnap.core.designsystem.components.EcoButton
+import com.example.ecosnap.features.articles.data.LocalArticles
 import com.example.ecosnap.features.home.HomeScreen
 import com.example.ecosnap.features.home.model.HomeUiState
 import com.example.ecosnap.features.map.PartnerDetailScreen
@@ -73,6 +74,8 @@ fun NavGraphBuilder.mainNavGraph(
     startDestination = Routes.HOME
   ) {
     composable(Routes.HOME) {
+      val news = LocalArticles.latestNews
+
       MainTabScaffold(
         navController = navController,
         selectedRoute = Routes.HOME
@@ -118,6 +121,18 @@ fun NavGraphBuilder.mainNavGraph(
 
           onPartnerClick = {
             navController.navigate(Routes.partnerDetail("tunas"))
+          },
+
+          newsTitle = news.title,
+          newsSummary = news.summary,
+          newsReadingMinutes = news.readingMinutes,
+
+          onNewsClick = {
+            navController.navigate(Routes.articleDetail(news.id))
+          },
+
+          onSeeAllArticles = {
+            navController.navigate(Routes.ARTICLES)
           }
         )
       }
@@ -207,6 +222,8 @@ fun NavGraphBuilder.mainNavGraph(
         }
       }
     }
+
+
 
     listOf(
       Routes.SCAN to "Scan Sampah",
