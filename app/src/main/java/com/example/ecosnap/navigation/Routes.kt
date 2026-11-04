@@ -1,5 +1,7 @@
 package com.example.ecosnap.navigation
 
+import android.net.Uri
+
 object Routes {
   const val SPLASH = "splash"
   const val ONBOARDING = "onboarding"
@@ -26,5 +28,14 @@ object Routes {
   const val MISSIONS = "missions"
   const val PARTNER_DETAIL = "partner_detail"
 
-  fun partnerDetail(id: String) = "$PARTNER_DETAIL/$id"
+  fun partnerDetail(id: String): String {
+    return "$PARTNER_DETAIL/${Uri.encode(id)}"
+  }
+
+  const val ARTICLES = "articles"
+  const val ARTICLE_DETAIL = "article_detail"
+
+  fun articleDetail(id: String): String {
+    return "$ARTICLE_DETAIL/${Uri.encode(id)}"
+  }
 }
