@@ -316,7 +316,7 @@ fun NavGraphBuilder.mainNavGraph(
 }
 
 @Composable
-private fun MainTabScaffold(
+fun MainTabScaffold(
   navController: NavHostController,
   selectedRoute: String,
   content: @Composable () -> Unit
