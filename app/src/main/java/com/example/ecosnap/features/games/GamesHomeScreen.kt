@@ -14,11 +14,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.ecosnap.core.designsystem.components.EcoAppHeader
 import com.example.ecosnap.core.designsystem.theme.EcoColor
-import com.example.ecosnap.core.designsystem.theme.EcosnapTheme
 import com.example.ecosnap.features.games.components.GamesLeaderboardCard
 import com.example.ecosnap.features.games.components.GamesSectionHeader
 import com.example.ecosnap.features.games.components.MiniGameCard
@@ -109,27 +107,5 @@ fun GamesHomeScreen(
         )
       }
     }
-  }
-}
-
-@Preview(
-  showBackground = true,
-  widthDp = 360,
-  heightDp = 780
-)
-@Composable
-private fun GamesHomePreview() {
-  EcosnapTheme(
-    darkTheme = false,
-    dynamicColor = false
-  ) {
-    GamesHomeScreen(
-      onAllGames = {},
-      onGameDetail = {},
-      onViewMission = {},
-      onLeaderboard = {},
-      onNotifications = {},
-      onProfile = {}
-    )
   }
 }
