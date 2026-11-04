@@ -28,6 +28,15 @@ object Routes {
   const val MISSIONS = "missions"
   const val PARTNER_DETAIL = "partner_detail"
 
+  const val GAMES_ALL = "games_all"
+  const val GAME_DETAIL = "game_detail"
+  const val GAME_PLAY = "game_play"
+  const val GAME_LEADERBOARD = "game_leaderboard"
+
+  fun gameDetail(id: String): String = "$GAME_DETAIL/${android.net.Uri.encode(id)}"
+
+  fun gamePlay(id: String): String = "$GAME_PLAY/${android.net.Uri.encode(id)}"
+
   fun partnerDetail(id: String): String {
     return "$PARTNER_DETAIL/${Uri.encode(id)}"
   }
