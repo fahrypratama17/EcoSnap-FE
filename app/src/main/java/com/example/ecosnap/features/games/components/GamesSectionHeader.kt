@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.sp
 import com.example.ecosnap.core.designsystem.theme.EcoColor
 
 @Composable
-fun GameSectionHeader(
+fun GamesSectionHeader(
   title: String,
   actionText: String? = null,
   onAction: (() -> Unit)? = null
