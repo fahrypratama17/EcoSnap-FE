@@ -11,7 +11,7 @@ data class MiniGame(
   val instructions: List<String>,
   val questions: List<GameQuestion>
 ) {
-  val totalQuestion: Int get() = questions.size
+  val totalQuestions: Int get() = questions.size
 
-  val maximumXp: Int get() = totalQuestion * xpPerCorrect
+  val maximumXp: Int get() = totalQuestions * xpPerCorrect
 }
