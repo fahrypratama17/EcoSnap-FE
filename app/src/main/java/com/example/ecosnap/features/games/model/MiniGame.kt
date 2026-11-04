@@ -8,7 +8,7 @@ data class MiniGame(
   val type: GameType,
   val difficulty: String = "Pemula",
   val xpPerCorrect: Int = 10,
-  val instruction: List<String>,
+  val instructions: List<String>,
   val questions: List<GameQuestion>
 ) {
   val totalQuestion: Int get() = questions.size
