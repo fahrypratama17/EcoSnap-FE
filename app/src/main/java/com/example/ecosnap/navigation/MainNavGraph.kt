@@ -254,13 +254,43 @@ fun NavGraphBuilder.mainNavGraph(
       }
     }
 
+    composable(Routes.POINTS) {
+      MainTabScaffold(
+        navController = navController,
+        selectedRoute = Routes.POINTS
+      ) {
+        Column(
+          modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+          horizontalAlignment = Alignment.CenterHorizontally,
+          verticalArrangement = Arrangement.Center
+        ) {
+          Text(
+            text = "Poin & Reward",
+            style = MaterialTheme.typography.titleLarge
+          )
+
+          Spacer(Modifier.height(16.dp))
+
+          EcoButton(
+            text = "Lihat Leaderboard Setoran",
+            onClick = {
+              navController.navigate(
+                Routes.DEPOSIT_LEADERBOARD
+              )
+            }
+          )
+        }
+      }
+    }
+
     gamesNavGraph(navController)
 
     leaderboardNavGraph(navController)
 
     listOf(
       Routes.SCAN to "Scan Sampah",
-      Routes.POINTS to "Poin & Reward",
     ).forEach { (route, title) ->
       composable(route) {
         MainTabScaffold(
