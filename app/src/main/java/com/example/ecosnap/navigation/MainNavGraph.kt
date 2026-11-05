@@ -84,55 +84,42 @@ fun NavGraphBuilder.mainNavGraph(
       ) {
         HomeScreen(
           uiState = HomeUiState.demo(),
-
           onNotification = {
             navController.navigate(Routes.NOTIFICATION)
           },
-
           onProfile = {
             navController.navigate(Routes.PROFILE)
           },
-
           onRedeemPoints = {
             navController.navigate(Routes.POINTS)
           },
-
           onScanQr = {
             navController.navigate(Routes.SCAN)
           },
-
           onFindPartner = {
             navController.navigate(Routes.MAP)
           },
-
           onHistory = {
             navController.navigate(Routes.HISTORY)
           },
-
           onScanWaste = {
             navController.navigate(Routes.SCAN)
           },
-
           onSeeALlMission = {
             navController.navigate(Routes.MISSIONS)
           },
-
           onSeeMap = {
             navController.navigate(Routes.MAP)
           },
-
           onPartnerClick = {
             navController.navigate(Routes.partnerDetail("tunas"))
           },
-
           newsTitle = news.title,
           newsSummary = news.summary,
           newsReadingMinutes = news.readingMinutes,
-
           onNewsClick = {
             navController.navigate(Routes.articleDetail(news.id))
           },
-
           onSeeAllArticles = {
             navController.navigate(Routes.ARTICLES)
           }
@@ -166,13 +153,9 @@ fun NavGraphBuilder.mainNavGraph(
         if (partner != null) {
           PartnerDetailScreen(
             partner = partner,
-
             onBack = {navController.popBackStack()},
-
             onNotifications = {navController.navigate(Routes.NOTIFICATION)},
-
             onProfile = {navController.navigate(Routes.PROFILE)},
-
             onContact = {
               val phone = partner.phone.filter {
                 it.isDigit() || it == '+'
@@ -232,17 +215,13 @@ fun NavGraphBuilder.mainNavGraph(
       ) {
         ArticleListScreen(
           onBack = { navController.popBackStack() },
-
           onArticleClick = { articleId ->
             navController.navigate(
               Routes.articleDetail(articleId)
             )
           },
-
           onOpenScan = { navController.navigate(Routes.SCAN) },
-
           onNotifications = { navController.navigate(Routes.NOTIFICATION) },
-
           onProfile = { navController.navigate(Routes.PROFILE) },
         )
       }
@@ -252,7 +231,6 @@ fun NavGraphBuilder.mainNavGraph(
       backStackEntry ->
 
       val articleId = backStackEntry.arguments?.getString("articleId").orEmpty()
-
       val article = LocalArticles.findById(articleId)
 
       MainTabScaffold(
@@ -262,13 +240,9 @@ fun NavGraphBuilder.mainNavGraph(
         if (article != null) {
           ArticleDetailScreen(
             article = article,
-
             onBack = { navController.popBackStack() },
-
             onFinished = { navController.popBackStack() },
-
             onNotifications = { navController.navigate(Routes.NOTIFICATION) },
-
             onProfile = { navController.navigate(Routes.PROFILE) }
           )
         } else {
@@ -280,10 +254,11 @@ fun NavGraphBuilder.mainNavGraph(
       }
     }
 
+    gamesNavGraph(navController)
+
     listOf(
       Routes.SCAN to "Scan Sampah",
       Routes.POINTS to "Poin & Reward",
-      Routes.GAMES to "Games",
     ).forEach { (route, title) ->
       composable(route) {
         MainTabScaffold(
@@ -316,7 +291,7 @@ fun NavGraphBuilder.mainNavGraph(
 }
 
 @Composable
-private fun MainTabScaffold(
+internal fun MainTabScaffold(
   navController: NavHostController,
   selectedRoute: String,
   content: @Composable () -> Unit
