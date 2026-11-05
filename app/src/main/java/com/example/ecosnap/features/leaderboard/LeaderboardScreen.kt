@@ -29,7 +29,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.composables.icons.lucide.ArrowLeft
@@ -37,7 +36,6 @@ import com.composables.icons.lucide.Info
 import com.composables.icons.lucide.Lucide
 import com.example.ecosnap.core.designsystem.components.EcoAppHeader
 import com.example.ecosnap.core.designsystem.theme.EcoColor
-import com.example.ecosnap.core.designsystem.theme.EcosnapTheme
 import com.example.ecosnap.features.leaderboard.components.LeaderboardExplanationCard
 import com.example.ecosnap.features.leaderboard.components.LeaderboardModeSelector
 import com.example.ecosnap.features.leaderboard.components.LeaderboardMyRankCard
@@ -258,50 +256,3 @@ fun LeaderboardScreen(
     }
   }
 }
-
-@Preview(
-  name = "Leaderboard - Setoran",
-  showBackground = true,
-  widthDp = 360,
-  heightDp = 780
-)
-@Composable
-private fun DepositLeaderboardPreview() {
-  EcosnapTheme(
-    darkTheme = false,
-    dynamicColor = false
-  ) {
-    LeaderboardScreen(
-      initialMode = LeaderboardMode.DEPOSIT,
-      onBack = {},
-      onNotifications = {},
-      onProfile = {}
-    )
-  }
-}
-
-@Preview(
-  name = "Leaderboard - Games",
-  showBackground = true,
-  widthDp = 360,
-  heightDp = 780
-)
-@Composable
-private fun GamesLeaderboardPreview() {
-  EcosnapTheme(
-    darkTheme = false,
-    dynamicColor = false
-  ) {
-    LeaderboardScreen(
-      initialMode = LeaderboardMode.GAMES,
-      onBack = {},
-      onNotifications = {},
-      onProfile = {}
-    )
-  }
-}
-
-
-
-
-
