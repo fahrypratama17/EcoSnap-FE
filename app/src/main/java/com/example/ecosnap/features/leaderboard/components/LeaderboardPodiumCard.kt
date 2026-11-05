@@ -1,12 +1,19 @@
 package com.example.ecosnap.features.leaderboard.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,7 +26,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.composables.icons.lucide.Lucide
+import com.composables.icons.lucide.Trophy
+import com.example.ecosnap.core.designsystem.components.EcoCard
 import com.example.ecosnap.core.designsystem.theme.EcoColor
+import com.example.ecosnap.features.leaderboard.model.LeaderboardMode
 import com.example.ecosnap.features.leaderboard.model.RankedLeaderboardEntry
 import java.text.NumberFormat
 import java.util.Locale
@@ -99,18 +110,103 @@ private fun PodiumPlace(
   }
 }
 
+@Composable
+fun LeaderboardPodiumCard(
+  ranking: List<RankedLeaderboardEntry>,
+  mode: LeaderboardMode,
+  modifier: Modifier = Modifier
+) {
+  val topThree = ranking.take(3)
 
+  EcoCard(
+    modifier = modifier.fillMaxWidth(),
+    containerColor = EcoColor.Green800,
+    borderColor = EcoColor.Green800,
+    contentPadding = PaddingValues(
+      start = 12.dp,
+      end = 12.dp,
+      top = 16.dp,
+      bottom = 0.dp
+    )
+  ) {
+    Row(
+      modifier = Modifier.fillMaxWidth(),
+      horizontalArrangement = Arrangement.Center,
+      verticalAlignment = Alignment.CenterVertically
+    ) {
+      Icon(
+        imageVector = Lucide.Trophy,
+        contentDescription = null,
+        tint = Color.White,
+        modifier = Modifier.size(19.dp)
+      )
 
+      Spacer(Modifier.width(8.dp))
 
+      Text(
+        text = "Top 3 Eco Heroes",
+        style = MaterialTheme.typography.titleMedium.copy(
+          fontSize = 14.sp,
+          lineHeight = 20.sp
+        ),
+        color = Color.White
+      )
+    }
 
+    Spacer(Modifier.height(9.dp))
 
+    Text(
+      text = mode.podiumSubtitle,
+      style = MaterialTheme.typography.bodyMedium.copy(
+        fontSize = 11.sp,
+        lineHeight = 16.sp,
+      ),
+      color = EcoColor.Green100,
+      textAlign = TextAlign.Center,
+      modifier = Modifier.fillMaxWidth()
+    )
 
+    Spacer(Modifier.height(22.dp))
 
+    if (topThree.size == 3) {
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Bottom,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+      ) {
+        PodiumPlace(
+          player = topThree[1],
+          scoreUnit = mode.scoreUnit,
+          pedestalHeight = 76.dp,
+          pedestalColor = Color(0xFF75C9A5),
+          avatarColor = Color(0xFFE7EBDC),
+          modifier = Modifier.weight(1f)
+        )
 
+        PodiumPlace(
+          player = topThree[0],
+          scoreUnit = mode.scoreUnit,
+          pedestalHeight = 115.dp,
+          pedestalColor = Color(0xFFE6EAD9),
+          avatarColor = Color(0xFFFFD88E),
+          modifier = Modifier.weight(1f)
+        )
 
-
-
-
-
-
-
+        PodiumPlace(
+          player = topThree[2],
+          scoreUnit = mode.scoreUnit,
+          pedestalHeight = 66.dp,
+          pedestalColor = Color(0xFF95D5B2),
+          avatarColor = Color(0xFF52B788),
+          modifier = Modifier.weight(1f)
+        )
+      }
+    } else {
+      Text(
+        text = "Belum cukup data untuk Top 3.",
+        color = Color.White,
+        modifier = Modifier.padding(bottom = 20.dp)
+      )
+    }
+  }
+}
