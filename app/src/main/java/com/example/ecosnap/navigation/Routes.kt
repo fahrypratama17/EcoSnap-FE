@@ -32,6 +32,7 @@ object Routes {
   const val GAME_DETAIL = "game_detail"
   const val GAME_PLAY = "game_play"
   const val GAME_LEADERBOARD = "game_leaderboard"
+  const val DEPOSIT_LEADERBOARD = "deposit_leaderboard"
 
   fun gameDetail(id: String): String = "$GAME_DETAIL/${android.net.Uri.encode(id)}"
 
