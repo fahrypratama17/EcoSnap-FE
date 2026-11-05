@@ -35,7 +35,7 @@ import com.example.ecosnap.features.leaderboard.model.RankedLeaderboardEntry
 import java.text.NumberFormat
 import java.util.Locale
 
-private fun formatScore(value: Int): String =
+internal fun formatScore(value: Int): String =
   NumberFormat.getNumberInstance(
     Locale.forLanguageTag("id-ID")
   ).format(value)
