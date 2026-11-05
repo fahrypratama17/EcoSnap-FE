@@ -256,6 +256,8 @@ fun NavGraphBuilder.mainNavGraph(
 
     gamesNavGraph(navController)
 
+    leaderboardNavGraph(navController)
+
     listOf(
       Routes.SCAN to "Scan Sampah",
       Routes.POINTS to "Poin & Reward",
