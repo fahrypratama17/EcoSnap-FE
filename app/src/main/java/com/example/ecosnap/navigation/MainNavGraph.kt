@@ -124,7 +124,6 @@ fun NavGraphBuilder.mainNavGraph(
             navController.navigate(Routes.ARTICLES)
           }
         )
-        gamesNavGraph(navController)
       }
     }
 
@@ -254,6 +253,8 @@ fun NavGraphBuilder.mainNavGraph(
         }
       }
     }
+
+    gamesNavGraph(navController)
 
     listOf(
       Routes.SCAN to "Scan Sampah",
