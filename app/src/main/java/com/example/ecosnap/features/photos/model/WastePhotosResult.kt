@@ -1,6 +1,6 @@
 package com.example.ecosnap.features.photos.model
 
-data class WasteScanResult(
+data class WastePhotosResult(
   val objectName: String,
   val category: String,
   val material: String,
