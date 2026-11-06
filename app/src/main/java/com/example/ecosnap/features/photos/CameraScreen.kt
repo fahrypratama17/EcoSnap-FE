@@ -7,9 +7,13 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCaptureException
 import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -120,6 +124,105 @@ fun CameraScreen(
         }
       }
     }
+
+  LaunchedEffect(Unit) {
+    if (!hasPermission) {
+      permissionLauncher.launch(
+        Manifest.permission.CAMERA
+      )
+    }
+  }
+
+  DisposableEffect(
+    cameraController,
+    lifecycleOwner,
+    hasPermission
+  ) {
+    if (hasPermission) {
+      try {
+        cameraController.bindToLifecycle(lifecycleOwner)
+        cameraReady = true
+      } catch (e: Exception) {
+        cameraReady = false
+        errorMessage = "Kamera tidak dapat dibuka pada perangkat ini."
+      }
+    }
+
+    onDispose {
+      cameraReady = false
+      cameraController.enableTorch(false)
+      cameraController.unbind()
+    }
+  }
+
+  fun capturePhoto() {
+    if (!hasPermission || !cameraReady || isCapturing || isImporting ) {
+      return
+    }
+
+    isCapturing = true
+    errorMessage = null
+
+    val photoFile = File(
+      context.cacheDir,
+      "ecosnap_${UUID.randomUUID()}.jpg"
+    )
+
+    val outputOption =
+      ImageCapture.OutputFileOptions
+        .Builder(photoFile)
+        .build()
+
+    try {
+      cameraController.takePicture(
+        outputOption,
+        ContextCompat.getMainExecutor(context),
+        object : ImageCapture.OnImageSavedCallback {
+
+          override fun onImageSaved(
+            outputFileResult: ImageCapture.OutputFileResults
+          ) {
+            isCapturing = false
+            onImageReady(Uri.fromFile(photoFile))
+          }
+
+          override fun onError(
+            exception: ImageCaptureException
+          ) {
+            isCapturing = false
+            photoFile.delete()
+            errorMessage = "Gagal mengambil foto. Silakan coba lagi."
+          }
+        }
+      )
+    } catch (e: Exception) {
+      isCapturing = false
+      photoFile.delete()
+      errorMessage = "Kamera belum siap mengambil foto."
+    }
+  }
+
+  fun toggleTorch() {
+    if (!hasPermission || !cameraReady || usingFrontCamera) {
+      return
+    }
+
+    if (cameraController.cameraInfo?.hasFlashUnit() != true) {
+      errorMessage = "Perangkat ini tidak memiliki lampu kamera."
+      return
+    }
+
+    try {
+      val nextState = !torchEnabled
+      cameraController.enableTorch(nextState)
+      torchEnabled = nextState
+      errorMessage = null
+    } catch (e: Exception) {
+      errorMessage = "Tidak dapat mengatur lampu kamera".
+    }
+  }
+
+
 }
 
 private fun copyImageToCache(
