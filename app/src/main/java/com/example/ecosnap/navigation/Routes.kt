@@ -19,6 +19,7 @@ object Routes {
   const val HOME = "home"
   const val MAP = "map"
   const val SCAN = "scan"
+  const val SCAN_RESULT = "scan_result"
   const val POINTS = "points"
   const val GAMES = "games"
 
@@ -33,6 +34,14 @@ object Routes {
   const val GAME_PLAY = "game_play"
   const val GAME_LEADERBOARD = "game_leaderboard"
   const val DEPOSIT_LEADERBOARD = "deposit_leaderboard"
+
+  fun scanResult(photoUri: Uri): String {
+    val encodedUri = Uri.encode(
+      photoUri.toString()
+    )
+
+    return "$SCAN_RESULT?photoUri=$encodedUri"
+  }
 
   fun gameDetail(id: String): String = "$GAME_DETAIL/${android.net.Uri.encode(id)}"
 
