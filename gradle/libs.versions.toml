@@ -2,7 +2,7 @@
 agp = "9.3.3"
 androidSdk = "13.7.1"
 cameraXVersion = "1.6.2"
-coilCompose = "3.6.3"
+coilCompose = "3.4.0"
 coreKtx = "1.19.0"
 datastorePreferences = "1.3.0"
 gson = "2.15.0"
