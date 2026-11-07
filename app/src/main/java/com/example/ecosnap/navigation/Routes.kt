@@ -24,7 +24,16 @@ object Routes {
   const val GAMES = "games"
 
   const val NOTIFICATION = "notification"
+
   const val PROFILE = "profile"
+  const val PROFILE_ACCOUNT_SETTINGS = "profile_account_settings"
+  const val PROFILE_HELP_CENTER = "profile_help_center"
+  const val PROFILE_ACTIVITY_HISTORY = "profile_activity_history"
+  const val PROFILE_REWARDS = "profile_rewards"
+  const val PROFILE_ACHIEVEMENTS = "profile_achievements"
+  const val PROFILE_ACTIVITY_REPORT = "profile_activity_report"
+  const val PROFILE_PRIVACY_SECURITY = "profile_privacy_security"
+
   const val HISTORY = "history"
   const val MISSIONS = "missions"
   const val PARTNER_DETAIL = "partner_detail"

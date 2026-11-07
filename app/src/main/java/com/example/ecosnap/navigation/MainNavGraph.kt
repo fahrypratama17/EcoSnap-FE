@@ -291,11 +291,11 @@ fun NavGraphBuilder.mainNavGraph(
 
     photoNavGraph(navController)
 
+    profileNavGraph(navController)
+
     listOf(
       Routes.NOTIFICATION to "Notifikasi",
-      Routes.PROFILE to "Profil",
       Routes.HISTORY to "Riwayat Setoran",
-      Routes.MISSIONS to "Semua Misi",
     ).forEach { (route, title) ->
       composable(route) {
         MainPlaceholder(
