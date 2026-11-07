@@ -289,20 +289,7 @@ fun NavGraphBuilder.mainNavGraph(
 
     leaderboardNavGraph(navController)
 
-    listOf(
-      Routes.SCAN to "Scan Sampah",
-    ).forEach { (route, title) ->
-      composable(route) {
-        MainTabScaffold(
-          navController = navController,
-          selectedRoute = route
-        ) {
-          MainPlaceholder(
-            title = title
-          )
-        }
-      }
-    }
+    photoNavGraph(navController)
 
     listOf(
       Routes.NOTIFICATION to "Notifikasi",
