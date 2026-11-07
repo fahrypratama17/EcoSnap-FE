@@ -5,12 +5,33 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -19,10 +40,27 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import com.composables.icons.lucide.Camera
+import com.composables.icons.lucide.Flashlight
+import com.composables.icons.lucide.FlashlightOff
+import com.composables.icons.lucide.Images
+import com.composables.icons.lucide.Lucide
+import com.composables.icons.lucide.SwitchCamera
+import com.composables.icons.lucide.X
+import com.example.ecosnap.core.designsystem.theme.EcoColor
+import com.example.ecosnap.features.photos.components.CameraControlButton
+import com.example.ecosnap.features.photos.components.CameraPreview
+import com.example.ecosnap.features.photos.components.CameraShutterButton
+import com.example.ecosnap.features.photos.components.PhotoFrameOverlay
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -218,11 +256,234 @@ fun CameraScreen(
       torchEnabled = nextState
       errorMessage = null
     } catch (e: Exception) {
-      errorMessage = "Tidak dapat mengatur lampu kamera".
+      errorMessage = "Tidak dapat mengatur lampu kamera."
     }
   }
 
+  fun switchCamera() {
+    if (!hasPermission || !cameraReady) return
 
+    try {
+      cameraController.enableTorch(false)
+      torchEnabled = false
+
+      val nextFront = !usingFrontCamera
+
+      cameraController.cameraSelector =
+        if (nextFront) {
+          CameraSelector.DEFAULT_FRONT_CAMERA
+        } else {
+          CameraSelector.DEFAULT_BACK_CAMERA
+        }
+
+      usingFrontCamera = nextFront
+      errorMessage = null
+    } catch (e: Exception) {
+      errorMessage = "Kamera yang dipilih tidak tersedia."
+    }
+  }
+
+  val busy = isCapturing || isImporting
+
+  Column(
+    modifier = modifier
+      .fillMaxSize()
+      .background(Color(0xFF172A24))
+      .padding(12.dp),
+    horizontalAlignment = Alignment.CenterHorizontally
+  ) {
+    Row(
+      modifier = Modifier.fillMaxWidth(),
+      verticalAlignment = Alignment.CenterVertically
+    ) {
+      IconButton(onClick = onBack) {
+        Icon(
+          imageVector = Lucide.X,
+          contentDescription = "Tutup kamera",
+          tint = Color.White
+        )
+      }
+
+      Column(
+        modifier = Modifier.weight(1f),
+        horizontalAlignment = Alignment.CenterHorizontally
+      ) {
+        Text(
+          text = "Foto sampah",
+          style = MaterialTheme.typography.titleMedium,
+          color = Color.White
+        )
+
+        Text(
+          text = "Kenali jenisnya dengan mudah",
+          fontSize = 11.sp,
+          color = EcoColor.Green200
+        )
+      }
+
+      IconButton(
+        onClick = { toggleTorch() },
+        enabled = hasPermission && cameraReady && !usingFrontCamera
+      ) {
+        Icon(
+          imageVector = if (torchEnabled) {
+            Lucide.FlashlightOff
+          } else {
+            Lucide.Flashlight
+          },
+          contentDescription =
+            if (torchEnabled) "Matikan lampu"
+            else "Nyalakan lampu",
+          tint = Color.White
+        )
+      }
+    }
+
+    Spacer(Modifier.height(10.dp))
+
+    Box(
+      modifier = Modifier
+        .fillMaxWidth()
+        .weight(1f)
+        .clip(RoundedCornerShape(18.dp))
+        .background(EcoColor.Green800),
+      contentAlignment = Alignment.Center
+    ) {
+      if (hasPermission) {
+        CameraPreview(
+          controller = cameraController,
+          modifier = Modifier.fillMaxSize()
+        )
+
+        PhotoFrameOverlay(
+          modifier = Modifier
+            .fillMaxSize()
+            .padding(20.dp)
+        )
+
+        Surface(
+          modifier = Modifier
+            .align(Alignment.TopCenter)
+            .padding(top = 14.dp),
+          shape = CircleShape,
+          color = Color.Black.copy(alpha = 0.45f)
+        ) {
+          Text(
+            text = "Satu objek dalam bingkai",
+            fontSize = 11.sp,
+            color = Color.White,
+            modifier = Modifier.padding(
+              horizontal = 12.dp,
+              vertical = 7.dp
+            )
+          )
+        }
+
+      } else {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+          Icon(
+            imageVector = Lucide.Camera,
+            contentDescription = null,
+            modifier = Modifier.size(48.dp),
+            tint = Color.White
+          )
+
+          Spacer(Modifier.height(10.dp))
+
+          Text(
+            text = "Izin kamera diperlukan",
+            color = Color.White
+          )
+
+          Spacer(Modifier.height(8.dp))
+
+          TextButton(
+            onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) }
+          ) {
+            Text(
+              text = "Izinkan Kamera",
+              color = EcoColor.Green100
+            )
+          }
+        }
+      }
+
+      if (busy) {
+        Box(
+          modifier = Modifier
+            .fillMaxSize()
+            .background(
+              Color.Black.copy(alpha = 0.25f)
+            ),
+          contentAlignment = Alignment.Center
+        ) {
+          CircularProgressIndicator(
+            color = Color.White
+          )
+        }
+      }
+    }
+
+    Spacer(Modifier.height(12.dp))
+
+    Text(
+      text = "Pastikan sampah terlihat jelas",
+      style = MaterialTheme.typography.labelLarge,
+      color = Color.White
+    )
+
+    Text(
+      text = "Gunakan cahaya cukup dan hindari foto buram",
+      fontSize = 11.sp,
+      color = EcoColor.Green200
+    )
+
+    if (errorMessage != null) {
+      Spacer(Modifier.height(8.dp))
+
+      Text(
+        text = errorMessage.orEmpty(),
+        color = Color(0xFFFFCCBF),
+        fontSize = 12.sp
+      )
+    }
+
+    Spacer(Modifier.height(18.dp))
+
+    Row(
+      modifier = Modifier
+        .fillMaxWidth()
+        .padding(bottom = 8.dp),
+      horizontalArrangement = Arrangement.SpaceEvenly,
+      verticalAlignment = Alignment.CenterVertically
+    ) {
+      CameraControlButton(
+        icon = Lucide.Images,
+        label = "Galeri",
+        onClick = {
+          galleryLauncher.launch(
+            PickVisualMediaRequest(
+              ActivityResultContracts.PickVisualMedia.ImageOnly
+            )
+          )
+        },
+        enabled = !busy
+      )
+
+      CameraShutterButton(
+        onClick = { capturePhoto() },
+        loading = busy,
+        enabled = hasPermission && cameraReady
+      )
+
+      CameraControlButton(
+        icon = Lucide.SwitchCamera,
+        label = "Balik",
+        onClick = { switchCamera() },
+        enabled = hasPermission && cameraReady && !busy
+      )
+    }
+  }
 }
 
 private fun copyImageToCache(
@@ -260,13 +521,3 @@ private fun copyImageToCache(
     throw e
   }
 }
-
-
-
-
-
-
-
-
-
-
