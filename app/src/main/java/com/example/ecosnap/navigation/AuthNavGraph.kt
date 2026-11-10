@@ -20,6 +20,7 @@ import com.example.ecosnap.features.auth.CheckEmailScreen
 import com.example.ecosnap.features.auth.NewPasswordScreen
 import com.example.ecosnap.features.auth.LoginScreen
 import com.example.ecosnap.features.auth.RegisterScreen
+import com.example.ecosnap.features.auth.model.AuthRole
 
 fun NavGraphBuilder.authNavGraph(
   navController: NavHostController
@@ -59,9 +60,9 @@ fun NavGraphBuilder.authNavGraph(
           )
         },
 
-        onLogin = { _, _ ->
+        onLogin = { _, _, role ->
           navController.navigate(
-            Routes.MAIN_GRAPH
+            if (role == AuthRole.PARTNER) Routes.ADMIN_GRAPH else Routes.MAIN_GRAPH
           ) {
             popUpTo(Routes.AUTH_GRAPH) {
               inclusive = true

@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.ecosnap.features.onboarding.OnboardingScreen
 import com.example.ecosnap.features.onboarding.SplashScreen
+import com.example.ecosnap.features.adminhome.AdminWorkspace
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -64,5 +65,16 @@ fun EcoSnapNavHost(
     mainNavGraph(
       navController = navController
     )
+
+    composable(Routes.ADMIN_GRAPH) {
+      AdminWorkspace(
+        onLogout = {
+          navController.navigate(Routes.AUTH_GRAPH) {
+            popUpTo(Routes.ADMIN_GRAPH) { inclusive = true }
+            launchSingleTop = true
+          }
+        }
+      )
+    }
   }
 }
