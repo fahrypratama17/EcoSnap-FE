@@ -26,12 +26,15 @@ import com.composables.icons.lucide.Bell
 import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.UserRound
 import com.example.ecosnap.R
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import com.example.ecosnap.core.designsystem.theme.EcoColor
 
 @Composable
 fun HomeHeader(
   onNotification: () -> Unit,
   onProfile: () -> Unit,
+  unreadCount: Long = 0,
   modifier: Modifier = Modifier
 ) {
   Row(
@@ -72,20 +75,30 @@ fun HomeHeader(
 
     Spacer(Modifier.weight(1f))
 
-    IconButton(
-      onClick = onNotification,
-      modifier = Modifier
-        .size(44.dp)
-        .background(
-          EcoColor.White,
-          CircleShape
-        )
+    BadgedBox(
+      badge = {
+        if (unreadCount > 0) {
+          Badge {
+            Text(if (unreadCount > 99) "99+" else unreadCount.toString())
+          }
+        }
+      }
     ) {
-      Icon(
-        imageVector = Lucide.Bell,
-        contentDescription = "Notifikasi",
-        tint = EcoColor.Green900
-      )
+      IconButton(
+        onClick = onNotification,
+        modifier = Modifier
+          .size(44.dp)
+          .background(
+            EcoColor.White,
+            CircleShape
+          )
+      ) {
+        Icon(
+          imageVector = Lucide.Bell,
+          contentDescription = if (unreadCount > 0) "Notifikasi, $unreadCount belum dibaca" else "Notifikasi",
+          tint = EcoColor.Green900
+        )
+      }
     }
 
     Spacer(Modifier.width(8.dp))

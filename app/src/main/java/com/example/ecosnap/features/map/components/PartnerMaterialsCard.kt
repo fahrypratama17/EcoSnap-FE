@@ -1,6 +1,8 @@
 package com.example.ecosnap.features.map.components
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,11 +23,11 @@ import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.Recycle
 import com.example.ecosnap.core.designsystem.components.EcoCard
 import com.example.ecosnap.core.designsystem.theme.EcoColor
-import com.example.ecosnap.features.map.model.WasteMaterial
+import com.example.ecosnap.core.model.WasteCategory
 
 @Composable
 fun PartnerMaterialChip(
-  material: WasteMaterial,
+  material: WasteCategory,
   modifier: Modifier = Modifier
 ) {
   Surface(
@@ -34,7 +36,7 @@ fun PartnerMaterialChip(
     color = EcoColor.Green100
   ) {
     Text(
-      text = material.label,
+      text = material.name,
       color = EcoColor.Green800,
       style = MaterialTheme.typography.labelSmall,
       modifier = Modifier.padding(
@@ -46,8 +48,9 @@ fun PartnerMaterialChip(
 }
 
 @Composable
+@OptIn(ExperimentalLayoutApi::class)
 fun PartnerAcceptedMaterialCard(
-  materials: Set<WasteMaterial>,
+  materials: List<WasteCategory>,
   modifier: Modifier = Modifier
 ) {
   EcoCard(
@@ -74,18 +77,47 @@ fun PartnerAcceptedMaterialCard(
 
     Spacer(Modifier.height(10.dp))
 
-    Row(
-      horizontalArrangement = Arrangement.spacedBy(6.dp)
-    ) {
-      materials.forEach {
-        PartnerMaterialChip(it)
+    if (materials.isEmpty()) {
+      Text(
+        text = "Mitra belum mencantumkan jenis sampah yang diterima.",
+        style = MaterialTheme.typography.bodyMedium,
+        color = EcoColor.Green700
+      )
+    } else {
+      FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+      ) {
+        materials.forEach {
+          PartnerMaterialChip(it)
+        }
+      }
+
+      materials.filter { it.handlingGuide.isNotBlank() }.forEach { material ->
+        Spacer(Modifier.height(10.dp))
+
+        Text(
+          text = material.name,
+          style = MaterialTheme.typography.labelLarge,
+          color = EcoColor.Green900
+        )
+
+        Text(
+          text = if (material.requiresSpecialHandling) {
+            "Penanganan khusus: ${material.handlingGuide}"
+          } else {
+            material.handlingGuide
+          },
+          style = MaterialTheme.typography.bodyMedium,
+          color = EcoColor.Green700
+        )
       }
     }
 
     Spacer(Modifier.height(10.dp))
 
     Text(
-      text = "Pastikan kondisi dna jenis material sesuai dengan ketentuan mitra sebelum menyetor.",
+      text = "Pastikan kondisi dan jenis material sesuai dengan ketentuan mitra sebelum menyetor.",
       style = MaterialTheme.typography.bodyMedium,
       color = EcoColor.Green700
     )

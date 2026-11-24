@@ -3,6 +3,7 @@ package com.example.ecosnap.features.home.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,19 +26,38 @@ import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.Trophy
 import com.example.ecosnap.core.designsystem.components.EcoCard
 import com.example.ecosnap.core.designsystem.theme.EcoColor
+import com.example.ecosnap.features.home.model.Mission
+import java.util.Locale
+
+/** Progress text in the mission's own unit: `gram` is shown as kg, `deposit` as a count. */
+internal fun Mission.progressLabel(): String = when (unit) {
+  "gram" -> "${kilograms(progress)}/${kilograms(target)} kg"
+  "deposit" -> "$progress/$target setoran"
+  else -> "$progress/$target"
+}
+
+private fun kilograms(grams: Long): String {
+  val kg = grams / 1000.0
+  return if (grams % 1000L == 0L) (grams / 1000L).toString() else String.format(Locale.forLanguageTag("id-ID"), "%.1f", kg)
+}
+
+internal fun Mission.statusLabel(): String = when (status) {
+  Mission.STATUS_CLAIMABLE -> "Siap diklaim"
+  Mission.STATUS_CLAIMED -> "Sudah diklaim"
+  else -> "Sedang berjalan"
+}
 
 @Composable
 fun HomeWeeklyMissionCard(
-  title: String,
-  description: String,
-  progress: Int,
-  target: Int,
-  reward: Int,
-  modifier: Modifier = Modifier
+  mission: Mission,
+  modifier: Modifier = Modifier,
+  footer: (@Composable ColumnScope.() -> Unit)? = null
 ) {
-  val safeTarget = target.coerceAtLeast(1)
-
-  val franction = (progress.toFloat() / safeTarget).coerceIn(0f, 1f)
+  val franction = if (mission.target > 0) {
+    (mission.progress.toFloat() / mission.target).coerceIn(0f, 1f)
+  } else {
+    0f
+  }
 
   EcoCard(
     modifier = modifier.fillMaxWidth()
@@ -68,7 +88,7 @@ fun HomeWeeklyMissionCard(
         modifier = Modifier.weight(1f)
       ) {
         Text(
-          text = title,
+          text = mission.title,
           style = MaterialTheme.typography.titleMedium.copy(
             fontSize = 14.sp,
             lineHeight = 19.sp
@@ -77,22 +97,21 @@ fun HomeWeeklyMissionCard(
           maxLines = 2
         )
 
-
         Spacer(Modifier.height(3.dp))
 
         Text(
-          text = description,
+          text = mission.description,
           fontSize = 11.sp,
           lineHeight = 15.sp,
           color = EcoColor.Green700,
-          maxLines = 2
+          maxLines = 3
         )
       }
 
       Spacer(Modifier.width(8.dp))
 
       Text(
-        text = "+$reward",
+        text = "+${mission.rewardXp} XP",
         fontSize = 13.sp,
         fontWeight = FontWeight.SemiBold,
         color = EcoColor.Green700
@@ -105,7 +124,7 @@ fun HomeWeeklyMissionCard(
       verticalAlignment = Alignment.CenterVertically
     ) {
       Text(
-        text = "Progress mingguan",
+        text = mission.statusLabel(),
         fontSize = 13.sp,
         color = EcoColor.Green900
       )
@@ -113,7 +132,7 @@ fun HomeWeeklyMissionCard(
       Spacer(Modifier.weight(1f))
 
       Text(
-        text = "${progress.coerceAtLeast(0)}/$safeTarget",
+        text = mission.progressLabel(),
         fontSize = 12.sp,
         color = EcoColor.Green700
       )
@@ -132,5 +151,7 @@ fun HomeWeeklyMissionCard(
     )
 
     Spacer(Modifier.height(6.dp))
+
+    footer?.invoke(this)
   }
 }

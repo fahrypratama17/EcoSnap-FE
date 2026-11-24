@@ -17,7 +17,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.ecosnap.core.auth.AccountProfile
 import com.example.ecosnap.core.designsystem.components.EcoButton
 import com.example.ecosnap.core.designsystem.theme.EcoColor
 
@@ -54,31 +53,6 @@ fun SessionUnavailableScreen(
   }
 }
 
-@Composable
-fun PartnerAccountScreen(
-  account: AccountProfile,
-  busy: Boolean,
-  error: String?,
-  onRefresh: () -> Unit,
-  onSignOut: () -> Unit
-) {
-  SessionPanel {
-    Text("Akun Mitra", style = MaterialTheme.typography.titleLarge, color = EcoColor.Green900)
-    Text("Status akun: Terhubung")
-    Text(account.fullName, style = MaterialTheme.typography.titleMedium)
-    Text(account.email, color = EcoColor.Green700)
-    Text("Telepon: ${account.phone}")
-    account.business?.let { business ->
-      Text("Usaha: ${business.name}")
-      Text("Kategori: ${business.category}")
-      Text("Status pendaftaran usaha: ${business.status}")
-    }
-    Text("Informasi ini berasal dari profil akun. Layanan operasional mitra belum tersedia.", style = MaterialTheme.typography.bodyMedium)
-    AuthOperationStatus(busy, error)
-    EcoButton("Perbarui status", onRefresh, enabled = !busy)
-    EcoButton("Keluar", onSignOut, enabled = !busy)
-  }
-}
 
 @Composable
 private fun SessionPanel(content: @Composable () -> Unit) {

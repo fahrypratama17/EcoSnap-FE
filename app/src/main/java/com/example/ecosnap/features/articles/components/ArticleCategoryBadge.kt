@@ -12,7 +12,7 @@ import com.example.ecosnap.core.designsystem.theme.EcoColor
 
 @Composable
 fun ArticleCategoryBadge(
-  category: ArticleCategory,
+  label: String,
   modifier: Modifier = Modifier
 ) {
   Surface(
@@ -21,7 +21,7 @@ fun ArticleCategoryBadge(
     color = EcoColor.Green100
   ) {
     Text(
-      text = category.label,
+      text = label,
       fontSize = 11.sp,
       color = EcoColor.Green800,
       modifier = Modifier.padding(

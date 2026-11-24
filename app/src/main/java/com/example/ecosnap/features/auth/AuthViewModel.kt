@@ -4,8 +4,8 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.ecosnap.BuildConfig
 import com.example.ecosnap.core.auth.AccountApi
+import com.example.ecosnap.core.network.BackendClient
 import com.example.ecosnap.core.auth.AccountRole
 import com.example.ecosnap.core.auth.AuthFailure
 import com.example.ecosnap.core.auth.AuthRepository
@@ -16,14 +16,12 @@ import com.example.ecosnap.features.auth.model.AuthRole
 import com.example.ecosnap.features.auth.model.RegistrationData
 import com.example.ecosnap.features.onboarding.data.OnboardingPreferences
 import com.google.firebase.auth.FirebaseAuth
-import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import okhttp3.OkHttpClient
 
 data class AuthUiState(
   val initialized: Boolean = false,
@@ -41,6 +39,16 @@ class AuthViewModel(
   val state: StateFlow<AuthUiState> = mutableState.asStateFlow()
 
   init {
+    // Backend-forced or SDK sign-out (null) must end the session even outside an operation. Non-null
+    // events are ignored so an active sign-in/sign-up pipeline is never raced or cancelled; the
+    // operation's own outcome (checked against the live Firebase user) decides the session then.
+    viewModelScope.launch {
+      repository.authUid.collect { uid ->
+        if (uid == null && mutableState.value.session !is SessionOutcome.SignedOut) {
+          mutableState.value = mutableState.value.copy(session = SessionOutcome.SignedOut)
+        }
+      }
+    }
     retry()
   }
 
@@ -122,18 +130,12 @@ class AuthViewModelFactory(context: Context) : ViewModelProvider.Factory {
 
   override fun <T : ViewModel> create(modelClass: Class<T>): T {
     require(modelClass.isAssignableFrom(AuthViewModel::class.java))
-    val client = OkHttpClient.Builder()
-      .connectTimeout(15, TimeUnit.SECONDS)
-      .readTimeout(20, TimeUnit.SECONDS)
-      .callTimeout(30, TimeUnit.SECONDS)
-      .followRedirects(false)
-      .followSslRedirects(false)
-      .build()
+    val backend = BackendClient.default
     @Suppress("UNCHECKED_CAST")
     return AuthViewModel(
       AuthRepository(
         FirebaseAuth.getInstance(),
-        AccountApi(client, BuildConfig.API_BASE_URL),
+        AccountApi(backend),
         PendingRegistrationStore(applicationContext)
       ),
       OnboardingPreferences(applicationContext)

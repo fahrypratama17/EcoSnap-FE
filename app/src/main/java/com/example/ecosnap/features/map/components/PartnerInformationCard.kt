@@ -25,7 +25,7 @@ import com.composables.icons.lucide.MapPin
 import com.composables.icons.lucide.Phone
 import com.example.ecosnap.core.designsystem.components.EcoCard
 import com.example.ecosnap.core.designsystem.theme.EcoColor
-import com.example.ecosnap.features.map.model.WastePartner
+import com.example.ecosnap.core.model.Partner
 
 @Composable
 fun PartnerInfoRow(
@@ -79,7 +79,7 @@ fun PartnerInfoRow(
 
 @Composable
 fun PartnerInformationCard(
-  partner: WastePartner,
+  partner: Partner,
   modifier: Modifier = Modifier
 ) {
   EcoCard(
@@ -107,7 +107,7 @@ fun PartnerInformationCard(
     PartnerInfoRow(
       icon = Lucide.Clock3,
       title = "Jam Operasional",
-      description = partner.openingHours
+      description = hoursText(partner)
     )
 
     HorizontalDivider(
@@ -118,7 +118,23 @@ fun PartnerInformationCard(
     PartnerInfoRow(
       icon = Lucide.Phone,
       title = "Kontak Mitra",
-      description = partner.phone
+      description = partner.phone.ifEmpty { "Belum tersedia" }
     )
+  }
+}
+
+private val dayNames = listOf("Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu")
+
+private fun hoursText(partner: Partner): String {
+  val lines = partner.hours
+    .sortedBy { (it.dayOfWeek + 6) % 7 }
+    .map { hour ->
+      val value = if (hour.isClosed) "Tutup" else "${hour.opensAt}–${hour.closesAt}"
+      "${dayNames[hour.dayOfWeek]}: $value"
+    }
+  return when {
+    lines.isNotEmpty() -> lines.joinToString("\n")
+    partner.openingHours.isNotEmpty() -> partner.openingHours
+    else -> "Belum tersedia"
   }
 }

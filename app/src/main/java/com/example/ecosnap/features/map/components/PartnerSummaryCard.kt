@@ -23,12 +23,13 @@ import com.composables.icons.lucide.Lucide
 import com.example.ecosnap.core.designsystem.components.EcoButton
 import com.example.ecosnap.core.designsystem.components.EcoCard
 import com.example.ecosnap.core.designsystem.theme.EcoColor
-import com.example.ecosnap.features.map.model.WastePartner
+import com.example.ecosnap.core.model.Partner
 
 @Composable
 fun PartnerSummaryCard(
-  partner: WastePartner,
+  partner: Partner,
   isFavorite: Boolean,
+  favoriteEnabled: Boolean,
   onFavoriteClick: () -> Unit,
   onDetailClick: () -> Unit,
   modifier: Modifier = Modifier
@@ -51,6 +52,7 @@ fun PartnerSummaryCard(
 
       IconButton(
         onClick = onFavoriteClick,
+        enabled = favoriteEnabled,
         modifier = Modifier.size(32.dp)
       ) {
         Icon(

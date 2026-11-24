@@ -28,7 +28,6 @@ import com.example.ecosnap.core.auth.SessionOutcome
 import com.example.ecosnap.core.designsystem.theme.EcoColor
 import com.example.ecosnap.features.auth.AuthViewModel
 import com.example.ecosnap.features.auth.AuthViewModelFactory
-import com.example.ecosnap.features.auth.PartnerAccountScreen
 import com.example.ecosnap.features.auth.RegisterScreen
 import com.example.ecosnap.features.auth.SessionUnavailableScreen
 import com.example.ecosnap.features.onboarding.OnboardingScreen
@@ -100,7 +99,10 @@ fun EcoSnapNavHost(
         )
         is SessionOutcome.Authenticated -> key(session.account.uid, session.account.role) {
           if (session.account.role == AccountRole.PARTNER) {
-            PartnerAccountScreen(session.account, state.busy, state.error, auth::retry, auth::signOut)
+            val controller = rememberNavController()
+            NavHost(controller, startDestination = Routes.PARTNER_HOME) {
+              partnerNavGraph(controller, session.account, auth::retry, auth::signOut)
+            }
           } else {
             val controller = rememberNavController()
             NavHost(controller, startDestination = Routes.MAIN_GRAPH) {

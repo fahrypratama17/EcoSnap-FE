@@ -27,7 +27,7 @@ import com.example.ecosnap.core.designsystem.theme.EcoColor
 
 @Composable
 fun ArticleFeaturedCard(
-  article: Article,
+  article: ArticleSummary,
   onClick: () -> Unit,
   modifier: Modifier = Modifier
 ) {
@@ -46,7 +46,7 @@ fun ArticleFeaturedCard(
       Spacer(Modifier.height(10.dp))
 
       Row(verticalAlignment = Alignment.CenterVertically) {
-        ArticleCategoryBadge(category = article.category)
+        ArticleCategoryBadge(label = article.badgeLabel)
 
         Spacer(Modifier.weight(1f))
 

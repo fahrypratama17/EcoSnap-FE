@@ -35,11 +35,11 @@ import com.example.ecosnap.core.designsystem.theme.EcoColor
 import com.example.ecosnap.features.map.components.PartnerAcceptedMaterialCard
 import com.example.ecosnap.features.map.components.PartnerDepositsStepsCard
 import com.example.ecosnap.features.map.components.PartnerInformationCard
-import com.example.ecosnap.features.map.model.WastePartner
+import com.example.ecosnap.core.model.Partner
 
 @Composable
 fun PartnerDetailScreen(
-  partner: WastePartner,
+  partner: Partner,
   onBack: () -> Unit,
   onContact: () -> Unit,
   onDirections: () -> Unit,
@@ -113,6 +113,16 @@ fun PartnerDetailScreen(
         )
       }
 
+      if (partner.description.isNotEmpty()) {
+        item {
+          Text(
+            text = partner.description,
+            style = MaterialTheme.typography.bodyMedium,
+            color = EcoColor.Green700
+          )
+        }
+      }
+
       item {
         PartnerAcceptedMaterialCard(materials = partner.acceptedMaterials)
       }
@@ -130,6 +140,7 @@ fun PartnerDetailScreen(
           EcoButton(
             text = "Hubungi",
             onClick = onContact,
+            enabled = partner.phone.isNotEmpty(),
             modifier = Modifier.weight(1f),
             containerColor = Color.White,
             contentColor = EcoColor.Green800,

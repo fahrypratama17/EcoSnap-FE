@@ -18,11 +18,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,10 +35,16 @@ import com.example.ecosnap.features.articles.components.ArticleFeaturedCard
 import com.example.ecosnap.features.articles.components.ArticleListCard
 import com.example.ecosnap.features.articles.components.ArticleSearchField
 import com.example.ecosnap.features.articles.components.ArticleTipCard
-import com.example.ecosnap.features.articles.data.LocalArticles
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.CircularProgressIndicator
 
 @Composable
 fun ArticleListScreen(
+  state: ArticleListUiState,
+  onQueryChange: (String) -> Unit,
+  onCategorySelected: (ArticleCategory?) -> Unit,
+  onRetry: () -> Unit,
+  onLoadMore: () -> Unit,
   onBack: () -> Unit,
   onArticleClick: (String) -> Unit,
   onOpenScan: () -> Unit,
@@ -51,34 +52,9 @@ fun ArticleListScreen(
   onProfile: () -> Unit,
   modifier: Modifier = Modifier
 ) {
-  var searchQuery by rememberSaveable {
-    mutableStateOf("")
-  }
-
-  var selectedCategoryName by rememberSaveable {
-    mutableStateOf("All")
-  }
-
-  val selectedCategory = ArticleCategory.entries.firstOrNull {
-    it.name == selectedCategoryName
-  }
-
-  val filteredArticles = remember(searchQuery, selectedCategoryName) {
-    val keyword = searchQuery.trim()
-
-    LocalArticles.articles.filter { article ->
-      val matchesCategory = selectedCategory == null || article.category == selectedCategory
-
-      val matchesSearch = keyword.isEmpty() || article.title.contains(keyword, ignoreCase = true)
-              ||  article.summary.contains(keyword, ignoreCase = true)
-
-      matchesSearch && matchesCategory
-    }
-  }
-
-  val featured = filteredArticles.firstOrNull { it.isFeatured } ?: filteredArticles.firstOrNull()
-
-  val regularArticles = filteredArticles.filter { it.id != featured?.id }
+  val articles = state.items
+  val featured = articles.firstOrNull { it.isFeatured } ?: articles.firstOrNull()
+  val regularArticles = articles.filter { it.id != featured?.id }
 
   Column(
     modifier = modifier
@@ -144,16 +120,54 @@ fun ArticleListScreen(
 
       item {
         ArticleSearchField(
-          value = searchQuery,
-          onValueChange = { searchQuery = it }
+          value = state.query,
+          onValueChange = onQueryChange
         )
       }
 
       item {
         ArticleCategoryFilters(
-          selectedCategory = selectedCategory,
-          onCategorySelected = { category -> selectedCategoryName = category?.name ?: "All"}
+          selectedCategory = state.category,
+          onCategorySelected = onCategorySelected
         )
+      }
+
+      if (state.isLoading) {
+        item {
+          Box(
+            modifier = Modifier
+              .fillMaxWidth()
+              .padding(vertical = 28.dp),
+            contentAlignment = Alignment.Center
+          ) {
+            CircularProgressIndicator(color = EcoColor.Green700)
+          }
+        }
+      }
+
+      if (state.error != null) {
+        item {
+          Column(
+            modifier = Modifier
+              .fillMaxWidth()
+              .padding(vertical = 28.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+          ) {
+            Text(
+              text = "Artikel belum dapat dimuat.",
+              style = MaterialTheme.typography.titleMedium,
+              color = EcoColor.Green900
+            )
+
+            Text(
+              text = state.error,
+              color = EcoColor.Green700,
+              textAlign = TextAlign.Center
+            )
+
+            TextButton(onClick = onRetry) { Text("Coba lagi") }
+          }
+        }
       }
 
       if (featured != null) {
@@ -176,7 +190,7 @@ fun ArticleListScreen(
         }
       }
 
-      item {
+      if (articles.isNotEmpty()) item {
         Row(
           modifier = Modifier.fillMaxWidth(),
           verticalAlignment = Alignment.CenterVertically
@@ -193,7 +207,7 @@ fun ArticleListScreen(
           Spacer(Modifier.weight(1f))
 
           Text(
-            text = "${regularArticles.size} artikel",
+            text = "${articles.size} artikel",
             fontSize = 12.sp,
             color = EcoColor.Green700
           )
@@ -212,7 +226,30 @@ fun ArticleListScreen(
         )
       }
 
-      if(filteredArticles.isEmpty()) {
+      if (state.hasMore || state.isLoadingMore || state.loadMoreError != null) {
+        item {
+          Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+          ) {
+            if (state.loadMoreError != null) {
+              Text(
+                text = state.loadMoreError,
+                color = EcoColor.Green700,
+                textAlign = TextAlign.Center
+              )
+            }
+
+            if (state.isLoadingMore) {
+              CircularProgressIndicator(color = EcoColor.Green700)
+            } else {
+              TextButton(onClick = onLoadMore) { Text("Muat lebih banyak") }
+            }
+          }
+        }
+      }
+
+      if (!state.isLoading && state.error == null && articles.isEmpty()) {
         item {
           Column(
             modifier = Modifier

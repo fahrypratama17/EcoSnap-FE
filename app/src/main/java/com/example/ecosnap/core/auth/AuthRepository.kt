@@ -9,7 +9,11 @@ import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.auth.FirebaseUser
 import java.io.IOException
+import com.example.ecosnap.core.network.BackendException
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
 /**
@@ -24,8 +28,8 @@ import kotlinx.coroutines.tasks.await
  * - POST is idempotent for identical data (201/200). On 409 a different profile already exists: GET /me
  *   is authoritative and the profile is never overwritten or recreated.
  * - Passwords are used only for the Firebase call and are never stored or sent to the backend.
- * - Every backend call uses a fresh SDK token; one 401 triggers one forced refresh and one replay.
- *   A second 401 or a 403 is terminal: sign out of Firebase.
+ * - Every backend call goes through the shared BackendClient: fresh SDK token per call, one forced
+ *   refresh and replay on 401. A terminal 401 or 403 account_forbidden signs out of Firebase.
  * - Firebase users are never deleted on registration failure; the signed-in user can retry.
  */
 class AuthRepository(
@@ -33,6 +37,13 @@ class AuthRepository(
     private val accountApi: AccountApi,
     private val pendingStore: PendingRegistrationStore,
 ) {
+    /** Emits the Firebase UID on every SDK auth-state change (null = signed out, including backend-forced). */
+    val authUid: Flow<String?> = callbackFlow {
+        val listener = FirebaseAuth.AuthStateListener { trySend(it.currentUser?.uid) }
+        firebaseAuth.addAuthStateListener(listener)
+        awaitClose { firebaseAuth.removeAuthStateListener(listener) }
+    }
+
     suspend fun restore(): SessionOutcome {
         val user = firebaseAuth.currentUser ?: return SessionOutcome.SignedOut
         return resolve(user)
@@ -95,9 +106,12 @@ class AuthRepository(
     /** GET /me restore path; falls through to the stored draft only on account_not_found. */
     private suspend fun resolve(user: FirebaseUser): SessionOutcome {
         val profile = try {
-            withToken(user) { accountApi.me(it) }
-        } catch (e: AccountApiException) {
-            if (e.kind != ApiErrorKind.NotFound) throw failureFor(user, e)
+            accountApi.me()
+        } catch (e: BackendException) {
+            if (!e.isNotFound()) throw failureFor(user, e)
+            if (firebaseAuth.currentUser?.uid != user.uid) {
+                throw AuthFailure("Sesi berubah. Silakan masuk kembali.", SessionOutcome.SignedOut)
+            }
             val draft = pendingStore.read(user.uid)
                 ?: return SessionOutcome.NeedsProfile(user.email.orEmpty(), null)
             return submit(user, draft)
@@ -107,17 +121,17 @@ class AuthRepository(
 
     private suspend fun submit(user: FirebaseUser, draft: RegistrationProfile): SessionOutcome {
         val profile = try {
-            withToken(user) { accountApi.register(it, draft) }
-        } catch (e: AccountApiException) {
-            when (e.kind) {
+            accountApi.register(draft)
+        } catch (e: BackendException) {
+            when {
                 // A different profile exists already: the backend copy wins, never overwrite it.
-                ApiErrorKind.Conflict -> try {
-                    withToken(user) { accountApi.me(it) }
-                } catch (g: AccountApiException) {
+                e.isConflict() -> try {
+                    accountApi.me()
+                } catch (g: BackendException) {
                     throw failureFor(user, g)
                 }
                 // Definite rejection: the draft is invalid, so drop it and let the user correct it.
-                ApiErrorKind.Rejected -> {
+                e.status == 400 -> {
                     pendingStore.remove(user.uid)
                     throw AuthFailure(
                         e.message ?: "Data pendaftaran ditolak server.",
@@ -142,47 +156,28 @@ class AuthRepository(
         return SessionOutcome.Authenticated(profile)
     }
 
-    private fun failureFor(user: FirebaseUser, e: AccountApiException): AuthFailure {
+    private fun failureFor(user: FirebaseUser, e: BackendException): AuthFailure {
         val email = user.email.orEmpty()
-        return when (e.kind) {
-            ApiErrorKind.Unauthorized, ApiErrorKind.Forbidden -> {
-                // Only sign out if this user is still the active session.
+        return when {
+            e.isUnauthorized() || e.isForbidden() -> {
+                // The client already signed out for terminal 401/403; this covers profile-level 403.
                 if (firebaseAuth.currentUser?.uid == user.uid) firebaseAuth.signOut()
-                val message = if (e.kind == ApiErrorKind.Forbidden) {
+                val message = if (e.isForbidden()) {
                     "Akun tidak aktif. Hubungi dukungan EcoSnap."
                 } else {
                     "Sesi tidak valid. Silakan masuk kembali."
                 }
                 AuthFailure(message, SessionOutcome.SignedOut)
             }
+            e.code == "session_changed" -> AuthFailure("Sesi berubah. Silakan masuk kembali.", SessionOutcome.SignedOut)
             else -> AuthFailure(UNAVAILABLE_MESSAGE, SessionOutcome.Unavailable(email))
         }
     }
 
-    /** Fresh SDK token per call; on 401 force-refresh once and replay once, nothing else is retried. */
-    private suspend fun <T> withToken(user: FirebaseUser, call: suspend (String) -> T): T {
-        val token = idToken(user, forceRefresh = false)
-        try {
-            return call(token)
-        } catch (e: AccountApiException) {
-            if (e.kind != ApiErrorKind.Unauthorized) throw e
-        }
-        return call(idToken(user, forceRefresh = true))
-    }
-
-    private suspend fun idToken(user: FirebaseUser, forceRefresh: Boolean): String = try {
-        user.getIdToken(forceRefresh).await().token?.takeIf { it.isNotEmpty() }
-            ?: throw AccountApiException(ApiErrorKind.Unavailable)
-    } catch (e: CancellationException) {
-        throw e
-    } catch (e: AccountApiException) {
-        throw e
-    } catch (e: FirebaseAuthInvalidUserException) {
-        // Account disabled/deleted or credentials revoked in Firebase.
-        throw AccountApiException(ApiErrorKind.Unauthorized)
-    } catch (e: Exception) {
-        throw AccountApiException(ApiErrorKind.Unavailable)
-    }
+    private fun BackendException.isUnauthorized() = status == 401
+    private fun BackendException.isForbidden() = status == 403 && code == "account_forbidden"
+    private fun BackendException.isNotFound() = status == 404 && code == "account_not_found"
+    private fun BackendException.isConflict() = status == 409 && code == "account_conflict"
 
     // Messages never include Firebase exception text, so credentials and tokens cannot leak.
     private fun signInMessage(e: Exception): String = when (e) {

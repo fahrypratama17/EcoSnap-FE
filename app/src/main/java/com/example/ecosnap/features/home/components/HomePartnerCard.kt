@@ -29,11 +29,11 @@ import androidx.compose.ui.unit.sp
 import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.Store
 import com.example.ecosnap.core.designsystem.theme.EcoColor
-import com.example.ecosnap.features.home.model.NearbyPartnerUi
+import com.example.ecosnap.core.model.Partner
 
 @Composable
 fun HomePartnerCard(
-  partner: NearbyPartnerUi,
+  partner: Partner,
   onClick: () -> Unit,
   modifier: Modifier = Modifier
 ) {
@@ -86,7 +86,7 @@ fun HomePartnerCard(
         )
 
         Text(
-          text = partner.location,
+          text = partner.area.ifBlank { partner.address },
           fontSize = 11.sp,
           lineHeight = 15.sp,
           color = EcoColor.Green700,
@@ -108,7 +108,7 @@ fun HomePartnerCard(
               shape = RoundedCornerShape(6.dp)
             ) {
               Text(
-                text = material,
+                text = material.name,
                 color = EcoColor.Green800,
                 fontSize = 10.sp,
                 modifier = Modifier.padding(

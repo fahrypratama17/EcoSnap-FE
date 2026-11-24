@@ -23,7 +23,8 @@ googleServices = "4.6.0"
 kotlinxCoroutines = "1.10.2"
 
 [libraries]
-android-sdk = { module = "org.maplibre.gl:android-sdk", version.ref = "androidSdk" }
+# OpenGL ES supports minSdk 24 devices/emulators without requiring Vulkan hardware.
+android-sdk = { module = "org.maplibre.gl:android-sdk-opengl", version.ref = "androidSdk" }
 androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraXVersion" }
 androidx-camera-core = { module = "androidx.camera:camera-core", version.ref = "cameraXVersion" }
 androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "cameraXVersion" }

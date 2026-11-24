@@ -6,6 +6,10 @@
     <uses-feature
         android:name="android.hardware.camera.any"
         android:required="false" />
+    <!-- MapLibre's OpenGL renderer requires OpenGL ES 3.0, independently of Android API level. -->
+    <uses-feature
+        android:glEsVersion="0x00030000"
+        android:required="true" />
 
     <application
         android:allowBackup="true"

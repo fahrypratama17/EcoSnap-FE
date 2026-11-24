@@ -1,7 +1,5 @@
 package com.example.ecosnap.navigation
 
-import android.content.ActivityNotFoundException
-import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,9 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
@@ -32,14 +28,12 @@ import com.example.ecosnap.core.auth.AccountProfile
 import com.example.ecosnap.core.designsystem.components.EcoBottomItem
 import com.example.ecosnap.core.designsystem.components.EcoBottomNavigation
 import com.example.ecosnap.core.designsystem.components.EcoButton
-import com.example.ecosnap.features.articles.ArticleDetailScreen
-import com.example.ecosnap.features.articles.ArticleListScreen
-import com.example.ecosnap.features.articles.data.LocalArticles
-import com.example.ecosnap.features.home.HomeScreen
-import com.example.ecosnap.features.home.model.HomeUiState
-import com.example.ecosnap.features.map.PartnerDetailScreen
-import com.example.ecosnap.features.map.PartnerMapScreen
-import com.example.ecosnap.features.map.model.DummyPartners
+import com.example.ecosnap.features.articles.ArticleDetailRoute
+import com.example.ecosnap.features.articles.ArticleListRoute
+import com.example.ecosnap.features.home.HomeRoute
+import com.example.ecosnap.features.home.MissionsRoute
+import com.example.ecosnap.features.map.PartnerDetailRoute
+import com.example.ecosnap.features.map.PartnerMapRoute
 
 private val bottomItems = listOf(
   EcoBottomItem(
@@ -79,185 +73,76 @@ fun NavGraphBuilder.mainNavGraph(
     startDestination = Routes.HOME
   ) {
     composable(Routes.HOME) {
-      val news = LocalArticles.latestNews
-
-      MainTabScaffold(
-        navController = navController,
-        selectedRoute = Routes.HOME
-      ) {
-        HomeScreen(
-          uiState = HomeUiState.demo().copy(
-            userName = account.displayName,
-            points = account.walletBalance,
-            monthlyDeposits = null
-          ),
-          onNotification = {
-            navController.navigate(Routes.NOTIFICATION)
-          },
-          onProfile = {
-            navController.navigate(Routes.PROFILE)
-          },
-          onRedeemPoints = {
-            navController.navigate(Routes.POINTS)
-          },
-          onScanQr = {
-            navController.navigate(Routes.SCAN_QR)
-          },
-          onFindPartner = {
-            navController.navigate(Routes.MAP)
-          },
-          onHistory = {
-            navController.navigate(Routes.HISTORY)
-          },
-          onScanWaste = {
-            navController.navigate(Routes.SCAN)
-          },
-          onSeeALlMission = {
-            navController.navigate(Routes.MISSIONS)
-          },
-          onSeeMap = {
-            navController.navigate(Routes.MAP)
-          },
-          onPartnerClick = {
-            navController.navigate(Routes.partnerDetail("tunas"))
-          },
-          newsTitle = news.title,
-          newsSummary = news.summary,
-          newsReadingMinutes = news.readingMinutes,
-          onNewsClick = {
-            navController.navigate(Routes.articleDetail(news.id))
-          },
-          onSeeAllArticles = {
-            navController.navigate(Routes.ARTICLES)
-          }
+      MainTabScaffold(navController, Routes.HOME) {
+        HomeRoute(
+          accountUid = account.uid,
+          onNotification = { navController.navigate(Routes.NOTIFICATION) },
+          onProfile = { navController.navigate(Routes.PROFILE) },
+          onRedeemPoints = { navController.navigate(Routes.POINTS) },
+          onScanQr = { navController.navigate(Routes.SCAN_QR) },
+          onFindPartner = { navController.navigate(Routes.MAP) },
+          onHistory = { navController.navigate(Routes.HISTORY) },
+          onScanWaste = { navController.navigate(Routes.SCAN) },
+          onSeeAllMissions = { navController.navigate(Routes.MISSIONS) },
+          onSeeMap = { navController.navigate(Routes.MAP) },
+          onPartnerClick = { id -> navController.navigate(Routes.partnerDetail(id)) },
+          onNewsClick = { id -> navController.navigate(Routes.articleDetail(id)) },
+          onSeeAllArticles = { navController.navigate(Routes.ARTICLES) }
         )
+      }
+    }
+
+    composable(Routes.MISSIONS) {
+      MainTabScaffold(navController, Routes.HOME) {
+        MissionsRoute(accountUid = account.uid, onBack = { navController.popBackStack() })
       }
     }
 
     composable(Routes.MAP) {
-      MainTabScaffold(
-        navController = navController,
-        selectedRoute = Routes.MAP
-      ) {
-        PartnerMapScreen(onPartnerDetail = {
-          id -> navController.navigate(Routes.partnerDetail(id))
-        })
-      }
-    }
-
-    composable(route = "${Routes.PARTNER_DETAIL}/{partnerId}") { backStackEntry ->
-      val partnerId = backStackEntry.arguments
-        ?.getString("partnerId")
-        .orEmpty()
-
-      val partner = DummyPartners.findById(partnerId)
-      val context = LocalContext.current
-
-      MainTabScaffold(
-        navController = navController,
-        selectedRoute = Routes.MAP
-      ) {
-        if (partner != null) {
-          PartnerDetailScreen(
-            partner = partner,
-            onBack = {navController.popBackStack()},
-            onNotifications = {navController.navigate(Routes.NOTIFICATION)},
-            onProfile = {navController.navigate(Routes.PROFILE)},
-            onContact = {
-              val phone = partner.phone.filter {
-                it.isDigit() || it == '+'
-              }
-
-              val intent = Intent(
-                Intent.ACTION_DIAL,
-                "tel:$phone".toUri()
-              )
-
-              try {
-                context.startActivity(intent)
-              } catch (_: ActivityNotFoundException) {
-              }
-            },onDirections = {
-              val lat = partner.location.latitude
-              val lon = partner.location.longitude
-
-              val geoIntent = Intent(
-                Intent.ACTION_VIEW,
-                "geo:0,0?q=$lat,$lon".toUri()
-              )
-
-              try {
-                context.startActivity(geoIntent)
-              } catch (_: ActivityNotFoundException) {
-
-                val osmUrl =
-                  "https://www.openstreetmap.org/" +
-                          "?mlat=$lat&mlon=$lon" +
-                          "#map=17/$lat/$lon"
-
-                context.startActivity(
-                  Intent(
-                    Intent.ACTION_VIEW,
-                    osmUrl.toUri()
-                  )
-                )
-              }
-            }
-          )
-        } else {
-          MainPlaceholder(
-            title = "Mitra tidak ditemukan",
-            onBack = {
-              navController.popBackStack()
-            }
-          )
+      MainTabScaffold(navController, Routes.MAP) {
+        PartnerMapRoute(accountUid = account.uid) { id ->
+          navController.navigate(Routes.partnerDetail(id))
         }
       }
     }
 
-    composable(Routes.ARTICLES) {
-      MainTabScaffold(
-        navController = navController,
-        selectedRoute = Routes.HOME
-      ) {
-        ArticleListScreen(
+    composable(route = "${Routes.PARTNER_DETAIL}/{partnerId}") { entry ->
+      val partnerId = entry.arguments?.getString("partnerId").orEmpty()
+      MainTabScaffold(navController, Routes.MAP) {
+        PartnerDetailRoute(
+          accountUid = account.uid,
+          partnerId = partnerId,
           onBack = { navController.popBackStack() },
-          onArticleClick = { articleId ->
-            navController.navigate(
-              Routes.articleDetail(articleId)
-            )
-          },
-          onOpenScan = { navController.navigate(Routes.SCAN) },
           onNotifications = { navController.navigate(Routes.NOTIFICATION) },
-          onProfile = { navController.navigate(Routes.PROFILE) },
+          onProfile = { navController.navigate(Routes.PROFILE) }
         )
       }
     }
 
-    composable(route = "${Routes.ARTICLE_DETAIL}/{articleId}") {
-      backStackEntry ->
+    composable(Routes.ARTICLES) {
+      MainTabScaffold(navController, Routes.HOME) {
+        ArticleListRoute(
+          accountUid = account.uid,
+          onBack = { navController.popBackStack() },
+          onArticleClick = { id -> navController.navigate(Routes.articleDetail(id)) },
+          onOpenScan = { navController.navigate(Routes.SCAN) },
+          onNotifications = { navController.navigate(Routes.NOTIFICATION) },
+          onProfile = { navController.navigate(Routes.PROFILE) }
+        )
+      }
+    }
 
-      val articleId = backStackEntry.arguments?.getString("articleId").orEmpty()
-      val article = LocalArticles.findById(articleId)
-
-      MainTabScaffold(
-        navController = navController,
-        selectedRoute = Routes.HOME
-      ) {
-        if (article != null) {
-          ArticleDetailScreen(
-            article = article,
-            onBack = { navController.popBackStack() },
-            onFinished = { navController.popBackStack() },
-            onNotifications = { navController.navigate(Routes.NOTIFICATION) },
-            onProfile = { navController.navigate(Routes.PROFILE) }
-          )
-        } else {
-          MainPlaceholder(
-            title =  "Artikel tidak ditemukan",
-            onBack = { navController.popBackStack() }
-          )
-        }
+    composable(route = "${Routes.ARTICLE_DETAIL}/{articleId}") { entry ->
+      val articleId = entry.arguments?.getString("articleId").orEmpty()
+      MainTabScaffold(navController, Routes.HOME) {
+        ArticleDetailRoute(
+          accountUid = account.uid,
+          articleId = articleId,
+          onBack = { navController.popBackStack() },
+          onFinished = { navController.popBackStack() },
+          onNotifications = { navController.navigate(Routes.NOTIFICATION) },
+          onProfile = { navController.navigate(Routes.PROFILE) }
+        )
       }
     }
 

@@ -34,6 +34,7 @@ fun HomeNewsCard(
   title: String,
   summary: String,
   readingMinutes: Int,
+  isDemo: Boolean,
   onClick: () -> Unit,
   modifier: Modifier = Modifier
 ) {
@@ -68,7 +69,7 @@ fun HomeNewsCard(
 
         Column(modifier = Modifier.weight(1f)) {
           Text(
-            text = "BERITA LINGKUNGAN",
+            text = if (isDemo) "BERITA LINGKUNGAN • DEMO" else "BERITA LINGKUNGAN",
             fontSize = 10.sp,
             color = EcoColor.Green700
           )

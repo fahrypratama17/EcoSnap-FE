@@ -17,7 +17,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.example.ecosnap.features.map.model.WastePartner
+import com.example.ecosnap.core.model.Partner
 import com.google.gson.JsonObject
 import org.maplibre.android.MapLibre
 import org.maplibre.android.camera.CameraUpdateFactory
@@ -64,7 +64,7 @@ private const val OSM_STYLE = """
 """
 
 private fun partnersToGeoJson(
-  partners: List<WastePartner>
+  partners: List<Partner>
 ): FeatureCollection {
   val features = partners.map { partner ->
     val properties = JsonObject().apply {
@@ -87,7 +87,7 @@ private fun partnersToGeoJson(
 
 @Composable
 fun MapLibrePartnerMap(
-  partners: List<WastePartner>,
+  partners: List<Partner>,
   selectedPartnerId: String?,
   onPartnerSelected: (String) -> Unit,
   modifier: Modifier = Modifier

@@ -30,7 +30,7 @@ import com.example.ecosnap.core.designsystem.theme.EcoColor
 
 @Composable
 fun ArticleListCard(
-  article: Article,
+  article: ArticleSummary,
   onClick: () -> Unit,
   modifier: Modifier = Modifier
 ) {
@@ -74,7 +74,7 @@ fun ArticleListCard(
 
       Column(modifier = Modifier.weight(1f)) {
         Text(
-          text = article.category.label,
+          text = article.badgeLabel,
           fontSize = 11.sp,
           color = EcoColor.Green700
         )
