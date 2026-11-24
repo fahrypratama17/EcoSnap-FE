@@ -45,6 +45,7 @@ class AccountApi(private val backend: BackendClient) {
         val role = when (data.requireString("role")) {
             "user" -> AccountRole.USER
             "mitra" -> AccountRole.PARTNER
+            "admin" -> AccountRole.ADMIN
             else -> throw invalidResponse()
         }
         when (data.requireString("status")) {
@@ -62,7 +63,12 @@ class AccountApi(private val backend: BackendClient) {
             )
         }
         if ((role == AccountRole.PARTNER) != (business != null)) throw invalidResponse()
-        val balance = data.requireObject("wallet").requireLong("balance")
+        // Admin accounts have no wallet; every other role must carry a valid one.
+        val balance = if (role == AccountRole.ADMIN) {
+            data.optionalObject("wallet")?.requireLong("balance") ?: 0L
+        } else {
+            data.requireObject("wallet").requireLong("balance")
+        }
         if (balance < 0) throw invalidResponse()
         return AccountProfile(
             uid = data.requireString("uid"),
@@ -70,7 +76,7 @@ class AccountApi(private val backend: BackendClient) {
             fullName = data.requireString("full_name"),
             displayName = data.requireString("display_name"),
             email = data.requireString("email", allowEmpty = true),
-            phone = data.requireString("phone"),
+            phone = data.requireString("phone", allowEmpty = role == AccountRole.ADMIN),
             walletBalance = balance,
             business = business,
         )

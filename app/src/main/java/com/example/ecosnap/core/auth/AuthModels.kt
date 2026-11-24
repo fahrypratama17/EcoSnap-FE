@@ -1,6 +1,6 @@
 package com.example.ecosnap.core.auth
 
-enum class AccountRole { USER, PARTNER }
+enum class AccountRole { USER, PARTNER, ADMIN }
 
 /**
  * Non-secret registration payload. It is persisted per Firebase UID before the backend POST so an
@@ -55,6 +55,7 @@ internal fun RegistrationProfile.normalized(): RegistrationProfile {
         throw AuthFailure("Nomor telepon harus 9-15 digit, boleh diawali tanda +.")
     }
     return when (role) {
+        AccountRole.ADMIN -> throw AuthFailure("Akun admin tidak dapat didaftarkan dari aplikasi.")
         AccountRole.USER -> RegistrationProfile(role, name, number)
         AccountRole.PARTNER -> {
             val business = businessName.orEmpty().trim()

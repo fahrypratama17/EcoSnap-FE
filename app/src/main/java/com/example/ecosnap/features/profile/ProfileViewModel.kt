@@ -90,6 +90,7 @@ class ProfileViewModel(
     when (role) {
       AccountRole.USER -> ProfileStats.User(repository.userStats())
       AccountRole.PARTNER -> ProfileStats.Partner(repository.partnerStats())
+      AccountRole.ADMIN -> null
     }
   } catch (e: CancellationException) {
     throw e

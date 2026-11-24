@@ -108,6 +108,11 @@ fun EcoSnapNavHost(
             NavHost(controller, startDestination = Routes.PARTNER_HOME) {
               partnerNavGraph(controller, session.account, auth::retry, auth::signOut)
             }
+          } else if (session.account.role == AccountRole.ADMIN) {
+            val controller = rememberNavController()
+            NavHost(controller, startDestination = Routes.ADMIN_HOME) {
+              adminNavGraph(session.account, auth::signOut)
+            }
           } else {
             val controller = rememberNavController()
             NavHost(controller, startDestination = Routes.MAIN_GRAPH) {

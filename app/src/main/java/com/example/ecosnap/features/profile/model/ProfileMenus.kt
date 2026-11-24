@@ -41,6 +41,7 @@ object ProfileMenus {
         route = Routes.PROFILE_ACTIVITY_REPORT
       )
     )
+    AccountRole.ADMIN -> emptyList()
     AccountRole.PARTNER -> listOf(
       ProfileMenuItemData(
         title = "Laporan Aktivitas",

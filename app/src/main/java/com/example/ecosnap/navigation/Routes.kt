@@ -16,6 +16,7 @@ object Routes {
 
   const val HOME = "home"
   const val PARTNER_HOME = "partner_home"
+  const val ADMIN_HOME = "admin_home"
   const val MAP = "map"
   const val SCAN = "scan"
   const val SCAN_RESULT = "scan_result"

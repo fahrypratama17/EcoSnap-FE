@@ -214,6 +214,7 @@ private fun statsFor(role: AccountRole, state: ProfileUiState): GreenStats {
         footer = "Setoran dihitung dari setoran yang sudah kamu klaim."
       )
     }
+    AccountRole.ADMIN -> GreenStats(title = "Admin", items = emptyList(), footer = null)
     AccountRole.PARTNER -> {
       val partner = (stats as? ProfileStats.Partner)?.value
       GreenStats(
