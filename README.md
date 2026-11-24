@@ -1,5 +1,7 @@
 # EcoSnap Android
 
+AI photo scanning now connects the existing CameraX/gallery flow to a server-side Groq Qwen vision integration. Setup, commands, API contract, test coverage, and live verification details are documented in [backend/README.md](backend/README.md).
+
 Kotlin / Jetpack Compose. Branch `12-feat/admin` adds the EcoSnap Mitra screens from the supplied reference: home, waste weight calculator, and deposit QR.
 
 ## Build without an emulator

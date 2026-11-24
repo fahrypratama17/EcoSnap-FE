@@ -1,3 +1,5 @@
+import java.net.URI
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -17,9 +19,18 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        val apiUrl = providers.gradleProperty("ECOSNAP_API_BASE_URL").getOrElse("")
+        require(apiUrl.isEmpty() || URI(apiUrl).let {
+            it.scheme in listOf("http", "https") && !it.host.isNullOrBlank() && it.userInfo == null && it.query == null && it.fragment == null
+        }) { "ECOSNAP_API_BASE_URL must be an HTTP(S) server URL without credentials." }
+        buildConfigField("String", "SCAN_API_BASE_URL", "\"$apiUrl\"")
     }
 
     buildTypes {
+        debug {
+            val apiUrl = providers.gradleProperty("ECOSNAP_API_BASE_URL").getOrElse("http://10.0.2.2:8000")
+            buildConfigField("String", "SCAN_API_BASE_URL", "\"$apiUrl\"")
+        }
         release {
             optimization {
                 enable = false
@@ -32,6 +43,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     testOptions {
         unitTests.isIncludeAndroidResources = true
@@ -52,6 +64,8 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.icons.lucide.cmp)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.navigation.compose)

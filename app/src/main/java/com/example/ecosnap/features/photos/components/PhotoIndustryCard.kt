@@ -22,7 +22,10 @@ import com.example.ecosnap.core.designsystem.theme.EcoColor
 @Composable
 fun ScanIndustryCard(
   description: String,
-  modifier: Modifier = Modifier
+  modifier: Modifier = Modifier,
+  possible: Boolean? = null,
+  products: List<String> = emptyList(),
+  limitations: List<String> = emptyList()
 ) {
   EcoCard(modifier = modifier.fillMaxWidth()) {
     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -36,7 +39,7 @@ fun ScanIndustryCard(
       Spacer(Modifier.width(9.dp))
 
       Text(
-        text = "Potensi Daur Ulang Industri",
+        text = if (possible == false) "Penanganan Akhir Sampah" else "Potensi Daur Ulang Industri",
         style = MaterialTheme.typography.titleMedium,
         color = EcoColor.Green900
       )
@@ -52,5 +55,13 @@ fun ScanIndustryCard(
       ),
       color = EcoColor.Green700
     )
+    if (products.isNotEmpty()) {
+      Spacer(Modifier.height(8.dp))
+      Text("Potensi produk: ${products.joinToString(", ")}", style = MaterialTheme.typography.bodyMedium, color = EcoColor.Green700)
+    }
+    limitations.forEach { limitation ->
+      Spacer(Modifier.height(6.dp))
+      Text("• $limitation", style = MaterialTheme.typography.bodyMedium, color = EcoColor.Green700)
+    }
   }
 }

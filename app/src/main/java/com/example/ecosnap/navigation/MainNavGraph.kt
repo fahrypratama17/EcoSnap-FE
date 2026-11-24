@@ -13,6 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -127,14 +128,19 @@ fun NavGraphBuilder.mainNavGraph(
       }
     }
 
-    composable(Routes.MAP) {
+    composable(Routes.MAP) { entry ->
       MainTabScaffold(
         navController = navController,
         selectedRoute = Routes.MAP
       ) {
-        PartnerMapScreen(onPartnerDetail = {
-          id -> navController.navigate(Routes.partnerDetail(id))
-        })
+        val scanSearch = remember(entry) {
+          navController.getBackStackEntry(Routes.MAIN_GRAPH).savedStateHandle
+        }
+        PartnerMapScreen(
+          onPartnerDetail = { id -> navController.navigate(Routes.partnerDetail(id)) },
+          initialQuery = scanSearch["scan_partner_query"] ?: "",
+          recommendationType = scanSearch["scan_partner_type"]
+        )
       }
     }
 
