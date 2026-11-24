@@ -94,7 +94,7 @@ fun NavGraphBuilder.mainNavGraph(
             navController.navigate(Routes.POINTS)
           },
           onScanQr = {
-            navController.navigate(Routes.SCAN)
+            navController.navigate(Routes.SCAN_QR)
           },
           onFindPartner = {
             navController.navigate(Routes.MAP)
@@ -261,6 +261,8 @@ fun NavGraphBuilder.mainNavGraph(
     leaderboardNavGraph(navController)
 
     photoNavGraph(navController)
+
+    scanNavGraph(navController)
 
     profileNavGraph(navController)
 
