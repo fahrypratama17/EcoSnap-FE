@@ -30,6 +30,8 @@ import com.example.ecosnap.core.designsystem.components.EcoTextField
 import com.example.ecosnap.core.designsystem.theme.EcoColor
 import com.example.ecosnap.features.auth.components.AuthDivider
 import com.example.ecosnap.features.auth.components.AuthLayout
+import com.example.ecosnap.features.auth.components.AuthRoleSelector
+import com.example.ecosnap.features.auth.model.AuthRole
 import com.example.ecosnap.features.auth.model.isValidEmail
 
 @Composable
@@ -38,13 +40,14 @@ fun LoginScreen(
   onRegisterClick: () -> Unit,
   onForgotPassword: () -> Unit,
   onHelp: () -> Unit,
-  onLogin: (String, String) -> Unit
+  onLogin: (String, String, AuthRole) -> Unit
 ) {
   var email by remember { mutableStateOf("") }
 
   var password by remember { mutableStateOf("") }
 
   var submitted by rememberSaveable { mutableStateOf(false) }
+  var role by rememberSaveable { mutableStateOf(AuthRole.USER) }
 
   AuthLayout(
     onBack = onBack,
@@ -65,6 +68,14 @@ fun LoginScreen(
     )
 
     Spacer(Modifier.height(28.dp))
+
+    AuthRoleSelector(
+      selectedRole = role,
+      onRoleSelected = { role = it },
+      label = "Masuk sebagai"
+    )
+
+    Spacer(Modifier.height(20.dp))
 
     EcoTextField(
       value = email,
@@ -110,7 +121,7 @@ fun LoginScreen(
         submitted = true
 
         if (isValidEmail(email) && password.isNotBlank()) {
-          onLogin(email.trim(), password)
+          onLogin(email.trim(), password, role)
         }
       },
 

@@ -15,6 +15,10 @@ object Routes {
   const val HELP = "help"
 
   const val MAIN_GRAPH = "main_graph"
+  const val ADMIN_GRAPH = "admin_graph"
+  const val ADMIN_HOME = "admin_home"
+  const val ADMIN_CALCULATOR = "admin_calculator"
+  const val ADMIN_GENERATE = "admin_generate"
 
   const val HOME = "home"
   const val MAP = "map"
