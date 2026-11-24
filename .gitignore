@@ -14,6 +14,9 @@
 .cxx
 local.properties
 
+# Per-developer Firebase project selection (download from Firebase Console)
+/app/google-services.json
+
 # IDE
 .idea/*
 .vscode
