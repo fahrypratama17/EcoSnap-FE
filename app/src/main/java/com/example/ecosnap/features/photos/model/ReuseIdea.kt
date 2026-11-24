@@ -5,5 +5,7 @@ data class ReuseIdea(
   val title: String,
   val description: String,
   val toolsAndMaterials: List<String>,
-  val steps: List<String>
+  val steps: List<String>,
+  val difficulty: String,
+  val safetyWarning: String
 )

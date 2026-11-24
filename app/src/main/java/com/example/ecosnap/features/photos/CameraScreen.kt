@@ -511,7 +511,15 @@ private fun copyImageToCache(
 
     input.use { source ->
       destination.outputStream().use { output ->
-        source.copyTo(output)
+        val chunk = ByteArray(8192)
+        var total = 0
+        while (true) {
+          val count = source.read(chunk)
+          if (count < 0) break
+          total += count
+          require(total <= 10 * 1024 * 1024) { "Foto terlalu besar" }
+          output.write(chunk, 0, count)
+        }
       }
     }
 

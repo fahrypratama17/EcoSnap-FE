@@ -24,6 +24,7 @@ object Routes {
   const val MAP = "map"
   const val SCAN = "scan"
   const val SCAN_RESULT = "scan_result"
+  const val SCAN_REVIEW = "scan_review"
   const val SCAN_QR = "scan_qr"
   const val SCAN_QR_RESULT = "scan_qr_result"
   const val POINTS = "points"
