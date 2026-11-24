@@ -66,4 +66,11 @@ object Routes {
   fun articleDetail(id: String): String {
     return "$ARTICLE_DETAIL/${Uri.encode(id)}"
   }
+
+  const val VOUCHER_DETAIL = "voucher_detail"
+  const val CALCULATOR = "calculator"
+
+  fun voucherDetail(id: String): String {
+    return "$VOUCHER_DETAIL/${Uri.encode(id)}"
+  }
 }

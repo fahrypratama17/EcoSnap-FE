@@ -58,7 +58,7 @@ private val bottomItems = listOf(
   ),
   EcoBottomItem(
     route = Routes.POINTS,
-    label = "Point",
+    label = "Poin",
     icon = Lucide.Gift
   ),
   EcoBottomItem(
@@ -254,36 +254,7 @@ fun NavGraphBuilder.mainNavGraph(
       }
     }
 
-    composable(Routes.POINTS) {
-      MainTabScaffold(
-        navController = navController,
-        selectedRoute = Routes.POINTS
-      ) {
-        Column(
-          modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-          horizontalAlignment = Alignment.CenterHorizontally,
-          verticalArrangement = Arrangement.Center
-        ) {
-          Text(
-            text = "Poin & Reward",
-            style = MaterialTheme.typography.titleLarge
-          )
-
-          Spacer(Modifier.height(16.dp))
-
-          EcoButton(
-            text = "Lihat Leaderboard Setoran",
-            onClick = {
-              navController.navigate(
-                Routes.DEPOSIT_LEADERBOARD
-              )
-            }
-          )
-        }
-      }
-    }
+    pointsNavGraph(navController)
 
     gamesNavGraph(navController)
 
@@ -296,6 +267,7 @@ fun NavGraphBuilder.mainNavGraph(
     listOf(
       Routes.NOTIFICATION to "Notifikasi",
       Routes.HISTORY to "Riwayat Setoran",
+      Routes.CALCULATOR to "Kalkulator Sampah",
     ).forEach { (route, title) ->
       composable(route) {
         MainPlaceholder(
