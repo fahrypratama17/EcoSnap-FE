@@ -74,6 +74,8 @@ fun PhotoReuseIdeaCard(
           ),
           color = EcoColor.Green700
         )
+        Spacer(Modifier.height(6.dp))
+        Text("Tingkat: ${idea.difficulty}", style = MaterialTheme.typography.labelSmall, color = EcoColor.Green700)
       }
     }
 
@@ -158,7 +160,7 @@ fun PhotoReuseIdeaCard(
         Spacer(Modifier.width(8.dp))
 
         Text(
-          text = "Gunakan alat tajam dengan hati-hati. Anak-anak perlu pendampingan orang dewasa.",
+          text = idea.safetyWarning,
           style = MaterialTheme.typography.bodyMedium.copy(
             fontSize = 11.sp,
             lineHeight = 16.sp

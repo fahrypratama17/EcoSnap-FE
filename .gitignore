@@ -18,3 +18,14 @@ local.properties
 .idea/*
 .vscode
 .vscode/*
+
+# Server credentials, virtual environments and generated files
+.env
+.env.*
+!.env.example
+**/.venv/
+**/__pycache__/
+**/.pytest_cache/
+*.pyc
+backend/.coverage
+.kotlin/

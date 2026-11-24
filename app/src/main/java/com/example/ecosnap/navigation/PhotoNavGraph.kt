@@ -11,6 +11,20 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import androidx.activity.compose.BackHandler
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.ecosnap.features.photos.PhotoReviewScreen
+import com.example.ecosnap.features.photos.WasteScanViewModel
+import com.example.ecosnap.features.photos.data.HttpWastePhotosRepository
+import androidx.navigation.NavBackStackEntry
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -26,6 +40,7 @@ fun NavGraphBuilder.photoNavGraph(
   navController: NavHostController
 ) {
   composable(Routes.SCAN) {
+    val scan = sharedWasteScanViewModel(navController, it)
     MainTabScaffold(
       navController = navController,
       selectedRoute = Routes.SCAN
@@ -35,13 +50,28 @@ fun NavGraphBuilder.photoNavGraph(
           navController.popBackStack()
         },
         onImageReady = { photoUri ->
-          navController.navigate(
-            Routes.scanResult(photoUri)
-          ) {
-            launchSingleTop = true
+          if (scan.selectImage(photoUri)) {
+            navController.navigate(Routes.SCAN_REVIEW) { launchSingleTop = true }
           }
         }
       )
+    }
+  }
+  composable(Routes.SCAN_REVIEW) { entry ->
+    val scan = sharedWasteScanViewModel(navController, entry)
+    val state by scan.state.collectAsStateWithLifecycle()
+    val retake: () -> Unit = {
+      scan.cancel()
+      navController.popBackStack(Routes.SCAN, false)
+    }
+    BackHandler(onBack = retake)
+    LaunchedEffect(state.result) {
+      if (state.result != null && state.photoUri != null) {
+        navController.navigate(Routes.scanResult(Uri.parse(state.photoUri))) { launchSingleTop = true }
+      }
+    }
+    MainTabScaffold(navController, Routes.SCAN) {
+      PhotoReviewScreen(state, scan::analyze, retake)
     }
   }
   composable(
@@ -53,6 +83,8 @@ fun NavGraphBuilder.photoNavGraph(
       }
     )
   ) { backStackEntry ->
+    val scan = sharedWasteScanViewModel(navController, backStackEntry)
+    val state by scan.state.collectAsStateWithLifecycle()
 
     val photoUriString = backStackEntry.arguments
       ?.getString("photoUri")
@@ -66,17 +98,18 @@ fun NavGraphBuilder.photoNavGraph(
       navController = navController,
       selectedRoute = Routes.SCAN
     ) {
-      if (photoUri != null) {
+      val result = state.result
+      if (photoUri != null && state.photoUri == photoUriString && result != null) {
+        BackHandler { navController.popBackStack(Routes.SCAN, false) }
         PhotoResultScreen(
           photoUri = photoUri,
-          onBack = { navController.popBackStack() },
+          result = result,
+          onBack = { navController.popBackStack(Routes.SCAN, false) },
           onFindPartner = {
+            navController.getBackStackEntry(Routes.MAIN_GRAPH).savedStateHandle["scan_partner_query"] = result.partnerSearchKeyword
+            navController.getBackStackEntry(Routes.MAIN_GRAPH).savedStateHandle["scan_partner_type"] = result.partnerType
             navController.navigate(Routes.MAP) {
-              popUpTo(Routes.HOME) {
-                saveState = true
-              }
               launchSingleTop = true
-              restoreState = true
             }
           },
           onNotifications = {
@@ -93,12 +126,27 @@ fun NavGraphBuilder.photoNavGraph(
       } else {
         MissingScanImageScreen(
           onBack = {
-            navController.popBackStack()
+            navController.popBackStack(Routes.SCAN, false)
           }
         )
       }
     }
   }
+}
+
+@Composable
+private fun sharedWasteScanViewModel(
+  navController: NavHostController,
+  entry: NavBackStackEntry
+): WasteScanViewModel {
+  val owner = remember(entry) { navController.getBackStackEntry(Routes.MAIN_GRAPH) }
+  val context = LocalContext.current.applicationContext
+  return viewModel(
+    viewModelStoreOwner = owner,
+    factory = viewModelFactory {
+      initializer { WasteScanViewModel(HttpWastePhotosRepository(context), createSavedStateHandle()) }
+    }
+  )
 }
 
 @Composable

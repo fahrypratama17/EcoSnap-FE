@@ -52,13 +52,15 @@ import com.example.ecosnap.features.map.model.WasteMaterial
 @Composable
 fun PartnerMapScreen(
   onPartnerDetail: (String) -> Unit,
-  modifier: Modifier = Modifier
+  modifier: Modifier = Modifier,
+  initialQuery: String = "",
+  recommendationType: String? = null
 ) {
   val context = LocalContext.current
   val partners = DummyPartners.partners
 
-  var query by rememberSaveable{
-    mutableStateOf("")
+  var query by rememberSaveable(initialQuery) {
+    mutableStateOf(initialQuery)
   }
 
   var selectedMaterial by remember {
@@ -130,6 +132,11 @@ fun PartnerMapScreen(
       )
 
       Spacer(Modifier.height(12.dp))
+
+      if (recommendationType != null) {
+        Text("Rekomendasi jenis mitra: $recommendationType", style = MaterialTheme.typography.bodyMedium, color = EcoColor.Green800)
+        Text("Peta ini masih memakai data mitra contoh. Verifikasi fasilitas dan penerimaan material secara langsung.", style = MaterialTheme.typography.bodySmall, color = EcoColor.Green700, modifier = Modifier.padding(vertical = 8.dp))
+      }
 
       OutlinedTextField(
         value = query,

@@ -1,0 +1,41 @@
+{
+  "status": "success",
+  "message": null,
+  "identification": {
+    "object_name": "Botol Plastik Minuman",
+    "material": "Plastik",
+    "category": "Anorganik",
+    "recyclable": true,
+    "recycling_status": "conditionally_recyclable",
+    "tags": ["Plastik", "Anorganik", "Potensi Daur Ulang"],
+    "description": "Botol plastik bekas yang memerlukan pemeriksaan material.",
+    "requires_verification": true,
+    "verification_note": "Periksa kode material pada kemasan dan ketentuan fasilitas.",
+    "hazardous": false
+  },
+  "handling_steps": ["Kosongkan sisa isi botol.", "Bilas bila diperlukan dan aman, lalu keringkan.", "Pisahkan sesuai ketentuan mitra."],
+  "upcycling": {
+    "possible": true,
+    "reason": null,
+    "ideas": [{
+      "title": "Pot Tanaman Mini",
+      "description": "Ubah botol bekas menjadi wadah tanaman.",
+      "difficulty": "Mudah",
+      "tools_and_materials": ["Botol bekas", "Tanah", "Bibit", "Gunting"],
+      "steps": ["Bersihkan dan keringkan botol.", "Potong botol dan rapikan tepinya.", "Buat lubang drainase dan isi tanah.", "Tanam bibit."],
+      "safety_warning": "Gunakan alat tajam dengan hati-hati dan dengan pendampingan orang dewasa untuk anak-anak."
+    }]
+  },
+  "industrial_recycling": {
+    "possible": true,
+    "description": "Plastik tertentu dapat dipilah dan diolah menjadi bahan baku baru.",
+    "potential_products": ["Pelet plastik"],
+    "limitations": ["Bergantung pada material dan fasilitas yang tersedia."]
+  },
+  "deposit_recommendation": {
+    "recommended": true,
+    "partner_type": "Bank Sampah",
+    "search_keyword": "Bank sampah botol plastik",
+    "preparation_note": "Pastikan botol kosong dan bersih."
+  }
+}
