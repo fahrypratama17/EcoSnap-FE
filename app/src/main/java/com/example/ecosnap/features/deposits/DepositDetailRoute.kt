@@ -1,12 +1,8 @@
 package com.example.ecosnap.features.deposits
 
-import android.app.Activity
-import android.content.Context
-import android.content.ContextWrapper
 import android.graphics.Bitmap
 import android.graphics.Color as AndroidColor
 import android.os.SystemClock
-import android.view.WindowManager
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -26,7 +22,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -38,7 +33,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -271,8 +265,6 @@ private fun QrPanel(qr: IssuedQr, onExpired: () -> Unit) {
     }
   }
   val expired = remainingMs <= 0L
-  // The QR is bearer value: keep it out of screenshots and the recents thumbnail while shown.
-  SecureWindow(!expired)
 
   Column(
     Modifier.fillMaxWidth().background(EcoColor.GreenSoft, RoundedCornerShape(20.dp)).padding(16.dp),
@@ -306,21 +298,6 @@ private fun QrPanel(qr: IssuedQr, onExpired: () -> Unit) {
 private fun remaining(qr: IssuedQr): Long =
   (qr.remainingMs - (SystemClock.elapsedRealtime() - qr.receivedAtElapsedMs)).coerceAtLeast(0L)
 
-@Composable
-private fun SecureWindow(enabled: Boolean) {
-  val context = LocalContext.current
-  DisposableEffect(enabled) {
-    val window = context.findActivity()?.window
-    if (enabled) window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-    onDispose { if (enabled) window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE) }
-  }
-}
-
-private tailrec fun Context.findActivity(): Activity? = when (this) {
-  is Activity -> this
-  is ContextWrapper -> baseContext.findActivity()
-  else -> null
-}
 
 internal object QrBitmap {
   fun create(content: String, size: Int): Bitmap {
