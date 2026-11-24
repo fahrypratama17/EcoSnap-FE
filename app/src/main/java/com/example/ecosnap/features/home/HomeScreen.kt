@@ -22,6 +22,7 @@ import com.example.ecosnap.core.designsystem.theme.EcosnapTheme
 import com.example.ecosnap.features.home.components.HomeHeader
 import com.example.ecosnap.features.home.components.HomeNewsCard
 import com.example.ecosnap.features.home.components.HomePartnerCard
+import com.example.ecosnap.features.home.components.HomePointsCard
 import com.example.ecosnap.features.home.components.HomeScanPromoCard
 import com.example.ecosnap.features.home.components.HomeSectionHeader
 import com.example.ecosnap.features.home.components.HomeTipCard
@@ -92,6 +93,17 @@ fun HomeScreen(
             color = EcoColor.Green700
           )
         }
+      }
+
+      item {
+        HomePointsCard(
+          points = uiState.points,
+          monthlyDeposits = uiState.monthlyDeposits,
+          onRedeem = onRedeemPoints,
+          onSqanQr = onScanQr,
+          onFindPartner = onFindPartner,
+          onHistory = onHistory
+        )
       }
 
       item {

@@ -24,6 +24,8 @@ object Routes {
   const val MAP = "map"
   const val SCAN = "scan"
   const val SCAN_RESULT = "scan_result"
+  const val SCAN_QR = "scan_qr"
+  const val SCAN_QR_RESULT = "scan_qr_result"
   const val POINTS = "points"
   const val GAMES = "games"
 
@@ -56,6 +58,10 @@ object Routes {
     return "$SCAN_RESULT?photoUri=$encodedUri"
   }
 
+  fun scanQrResult(transactionId: String): String {
+    return "$SCAN_QR_RESULT/${Uri.encode(transactionId)}"
+  }
+
   fun gameDetail(id: String): String = "$GAME_DETAIL/${android.net.Uri.encode(id)}"
 
   fun gamePlay(id: String): String = "$GAME_PLAY/${android.net.Uri.encode(id)}"
@@ -69,5 +75,12 @@ object Routes {
 
   fun articleDetail(id: String): String {
     return "$ARTICLE_DETAIL/${Uri.encode(id)}"
+  }
+
+  const val VOUCHER_DETAIL = "voucher_detail"
+  const val CALCULATOR = "calculator"
+
+  fun voucherDetail(id: String): String {
+    return "$VOUCHER_DETAIL/${Uri.encode(id)}"
   }
 }
