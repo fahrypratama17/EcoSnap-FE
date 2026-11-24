@@ -19,6 +19,7 @@ object Routes {
   const val MAP = "map"
   const val SCAN = "scan"
   const val SCAN_RESULT = "scan_result"
+  const val SCAN_REVIEW = "scan_review"
   const val SCAN_QR = "scan_qr"
   const val SCAN_QR_RESULT = "scan_qr_result"
   const val POINTS = "points"
@@ -49,6 +50,8 @@ object Routes {
   const val GAME_PLAY = "game_play"
   const val GAME_LEADERBOARD = "game_leaderboard"
   const val DEPOSIT_LEADERBOARD = "deposit_leaderboard"
+
+  fun scanReview(photoUri: Uri): String = "$SCAN_REVIEW?photoUri=${Uri.encode(photoUri.toString())}"
 
   fun scanResult(photoUri: Uri): String {
     val encodedUri = Uri.encode(

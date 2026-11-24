@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
@@ -36,6 +37,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ecosnap.core.designsystem.components.EcoButton
+import com.composables.icons.lucide.Lucide
+import com.composables.icons.lucide.Ticket
 import com.example.ecosnap.core.designsystem.components.EcoCard
 import com.example.ecosnap.core.designsystem.theme.EcoColor
 
@@ -77,9 +80,18 @@ internal fun VoucherListScreen(
   }
 
   Column(Modifier.fillMaxSize()) {
-    WalletTopBar("Voucher Saya", onBack)
+    WalletBackLink("Kembali", onBack, Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+    Text(
+      "Voucher Saya",
+      fontSize = 22.sp,
+      lineHeight = 28.sp,
+      fontWeight = FontWeight.Bold,
+      color = EcoColor.Green900,
+      modifier = Modifier.padding(horizontal = 16.dp)
+    )
+    Spacer(Modifier.height(8.dp))
     Row(
-      Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+      Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp),
       horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
       FilterChip(selected = state.status == null, onClick = { onStatus(null) }, label = { Text("Semua") })
@@ -94,7 +106,7 @@ internal fun VoucherListScreen(
       verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
       item {
-        Text(VOUCHER_SIMULATION_NOTE, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(VOUCHER_SIMULATION_NOTE, fontSize = 11.sp, lineHeight = 16.sp, color = EcoColor.Green700)
       }
       when {
         state.isLoading && !state.loaded -> item { LoadingBox() }
@@ -139,7 +151,7 @@ internal fun VoucherDetailScreen(
 ) {
   var confirm by rememberSaveable { mutableStateOf(false) }
   Column(Modifier.fillMaxSize()) {
-    WalletTopBar("Detail Voucher", onBack)
+    WalletBackLink("Kembali", onBack, Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
     val voucher = state.voucher
     Column(
       Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(16.dp),
@@ -157,12 +169,14 @@ internal fun VoucherDetailScreen(
         else -> {
           state.error?.let { ErrorBox(it, onRetry) }
           val status = voucher.effectiveStatus()
-          EcoCard(Modifier.fillMaxWidth()) {
+          WalletHeroTile(Lucide.Ticket)
+          Column(Modifier.fillMaxWidth()) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
               Text(
                 voucher.rewardName,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
+                fontSize = 17.sp,
+                lineHeight = 22.sp,
+                fontWeight = FontWeight.SemiBold,
                 color = EcoColor.Green900,
                 modifier = Modifier.weight(1f)
               )
@@ -170,10 +184,14 @@ internal fun VoucherDetailScreen(
               StatusTag(status)
             }
             Spacer(Modifier.height(10.dp))
-            // The code is shown only here, only for a still-usable voucher.
-            if (status == VoucherStatus.Issued) {
-              voucher.code?.let { code ->
-                Text("Kode voucher", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            WalletCostLine(voucher.costPoints)
+          }
+          // The code is shown only here, only for a still-usable voucher.
+          if (status == VoucherStatus.Issued) {
+            voucher.code?.let { code ->
+              WalletOutlinedCard {
+                Text("Kode voucher", fontSize = 12.sp, color = EcoColor.Green700)
+                Spacer(Modifier.height(4.dp))
                 Text(
                   code,
                   fontSize = 24.sp,
@@ -181,29 +199,32 @@ internal fun VoucherDetailScreen(
                   fontFamily = FontFamily.Monospace,
                   color = EcoColor.Green800
                 )
-                Spacer(Modifier.height(10.dp))
               }
             }
-            InfoLine("Harga", "${formatNumber(voucher.costPoints)} poin")
+          }
+          WalletOutlinedCard {
+            Text("Detail Voucher", fontSize = 15.sp, lineHeight = 20.sp, fontWeight = FontWeight.Bold, color = EcoColor.Green900)
+            Spacer(Modifier.height(6.dp))
             InfoLine("Ditukar", formatTimestamp(voucher.createdAt))
             InfoLine("Berlaku sampai", formatTimestamp(voucher.expiresAt))
             voucher.usedAt?.let { InfoLine("Dipakai", formatTimestamp(it)) }
+            Spacer(Modifier.height(8.dp))
+            Text(VOUCHER_SIMULATION_NOTE, fontSize = 11.sp, lineHeight = 16.sp, color = EcoColor.Green700)
           }
-          Text(VOUCHER_SIMULATION_NOTE, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
       }
     }
     val usable = state.voucher?.effectiveStatus() == VoucherStatus.Issued
     if (state.voucher != null) {
-      EcoButton(
+      WalletPillButton(
         text = when {
           state.isUsing -> "Memproses…"
           usable -> "Tandai sudah dipakai"
           else -> state.voucher.effectiveStatus().label
         },
-        onClick = { confirm = true },
         enabled = usable && !state.isUsing,
-        modifier = Modifier.fillMaxWidth().padding(16.dp)
+        onClick = { confirm = true },
+        modifier = Modifier.padding(16.dp)
       )
     }
   }

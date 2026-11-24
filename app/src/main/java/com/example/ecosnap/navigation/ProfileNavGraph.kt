@@ -1,9 +1,6 @@
 package com.example.ecosnap.navigation
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
@@ -141,8 +138,13 @@ private fun ProfileScaffold(
   content: @Composable () -> Unit
 ) {
   if (isUser) {
-    MainTabScaffold(navController = navController, selectedRoute = selectedRoute, content = content)
+    MainTabScaffold(
+      navController = navController,
+      selectedRoute = selectedRoute,
+      showHeader = selectedRoute == Routes.POINTS,
+      content = content
+    )
   } else {
-    Box(Modifier.fillMaxSize()) { content() }
+    PartnerTabScaffold(navController, Routes.PARTNER_HOME, showHeader = false, content = content)
   }
 }

@@ -11,11 +11,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.composable
 import com.example.ecosnap.core.auth.AccountProfile
 import com.example.ecosnap.features.deposits.DepositDetailRoute
 import com.example.ecosnap.features.deposits.EstimateRoute
@@ -33,7 +33,7 @@ fun NavGraphBuilder.partnerNavGraph(
   onRefreshAccount: () -> Unit,
   onLogout: () -> Unit
 ) {
-  composable(Routes.PARTNER_HOME) {
+  partnerDestination(Routes.PARTNER_HOME, navController) {
     PartnerHomeRoute(
       account = account,
       onRefreshAccount = onRefreshAccount,
@@ -46,14 +46,14 @@ fun NavGraphBuilder.partnerNavGraph(
       onEstimate = { navController.navigate(Routes.ESTIMATE) }
     )
   }
-  composable(Routes.MAP) {
+  partnerDestination(Routes.MAP, navController) {
     PartnerBrowseScaffold(onBack = { navController.popBackStack() }) {
       PartnerMapRoute(accountUid = account.uid) { id ->
         navController.navigate(Routes.partnerDetail(id))
       }
     }
   }
-  composable("${Routes.PARTNER_DETAIL}/{partnerId}") { entry ->
+  partnerDestination("${Routes.PARTNER_DETAIL}/{partnerId}", navController, showHeader = false) { entry ->
     PartnerDetailRoute(
       accountUid = account.uid,
       partnerId = entry.arguments?.getString("partnerId").orEmpty(),
@@ -62,7 +62,7 @@ fun NavGraphBuilder.partnerNavGraph(
       onProfile = { navController.navigate(Routes.PROFILE) }
     )
   }
-  composable(Routes.PARTNER_DEPOSITS) {
+  partnerDestination(Routes.PARTNER_DEPOSITS, navController, Routes.PARTNER_DEPOSITS) {
     PartnerDepositsRoute(
       accountUid = account.uid,
       onBack = { navController.popBackStack() },
@@ -70,7 +70,13 @@ fun NavGraphBuilder.partnerNavGraph(
       onOpen = { navController.navigate(Routes.partnerDepositDetail(it)) }
     )
   }
-  composable(Routes.PARTNER_DEPOSIT_CREATE) {
+  partnerDestination(Routes.PARTNER_DEPOSIT_CREATE, navController, Routes.PARTNER_DEPOSITS) { entry ->
+    val initialItems = remember(entry) {
+      entry.savedStateHandle.get<String>(PARTNER_DEPOSIT_DRAFT)
+        ?: navController.previousBackStackEntry?.savedStateHandle
+          ?.remove<String>(PARTNER_DEPOSIT_DRAFT)
+          ?.also { entry.savedStateHandle[PARTNER_DEPOSIT_DRAFT] = it }
+    }
     PartnerDepositCreateRoute(
       accountUid = account.uid,
       onBack = { navController.popBackStack() },
@@ -79,10 +85,11 @@ fun NavGraphBuilder.partnerNavGraph(
           popUpTo(Routes.PARTNER_DEPOSIT_CREATE) { inclusive = true }
           launchSingleTop = true
         }
-      }
+      },
+      initialItemsJson = initialItems
     )
   }
-  composable("${Routes.PARTNER_DEPOSIT_DETAIL}/{depositId}") { entry ->
+  partnerDestination("${Routes.PARTNER_DEPOSIT_DETAIL}/{depositId}", navController, Routes.PARTNER_DEPOSITS, showHeader = false) { entry ->
     DepositDetailRoute(
       accountUid = account.uid,
       depositId = entry.arguments?.getString("depositId").orEmpty(),
@@ -92,10 +99,17 @@ fun NavGraphBuilder.partnerNavGraph(
       onProfile = { navController.navigate(Routes.PROFILE) }
     )
   }
-  composable(Routes.ESTIMATE) {
-    EstimateRoute(accountUid = account.uid, onBack = { navController.popBackStack() })
+  partnerDestination(Routes.ESTIMATE, navController, Routes.ESTIMATE) {
+    EstimateRoute(
+      accountUid = account.uid,
+      onBack = { navController.popBackStack() },
+      onCreateDeposit = { items ->
+        navController.currentBackStackEntry?.savedStateHandle?.set(PARTNER_DEPOSIT_DRAFT, items)
+        navController.navigate(Routes.PARTNER_DEPOSIT_CREATE) { launchSingleTop = true }
+      }
+    )
   }
-  composable(Routes.NOTIFICATION) {
+  partnerDestination(Routes.NOTIFICATION, navController) {
     NotificationsRoute(
       accountUid = account.uid,
       isPartner = true,
@@ -118,3 +132,5 @@ private fun PartnerBrowseScaffold(onBack: () -> Unit, content: @Composable () ->
     Box(Modifier.weight(1f)) { content() }
   }
 }
+
+private const val PARTNER_DEPOSIT_DRAFT = "partner_deposit_draft"

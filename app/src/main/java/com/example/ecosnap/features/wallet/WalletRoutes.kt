@@ -30,7 +30,8 @@ fun PointsRoute(
   onHistory: () -> Unit,
   onVouchers: () -> Unit,
   onEstimate: () -> Unit,
-  onLeaderboard: () -> Unit
+  onLeaderboard: () -> Unit,
+  onScanQr: () -> Unit
 ) {
   val context = LocalContext.current
   val store = remember(context) { WalletStores.get(context) }
@@ -57,7 +58,8 @@ fun PointsRoute(
     onHistory = onHistory,
     onVouchers = onVouchers,
     onEstimate = onEstimate,
-    onLeaderboard = onLeaderboard
+    onLeaderboard = onLeaderboard,
+    onScanQr = onScanQr
   )
 }
 

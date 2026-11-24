@@ -1,5 +1,17 @@
 package com.example.ecosnap.features.deposits
 
+import androidx.compose.runtime.remember
+import com.composables.icons.lucide.ArrowRight
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import com.composables.icons.lucide.Gamepad2
+import com.composables.icons.lucide.Lucide
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -104,22 +116,42 @@ class EstimateViewModel(private val repository: DepositRepository) : ViewModel()
   }
 }
 
+/** JSON array of category_id + canonical weight_kg from the server-priced items; null if any weight is not canonical. */
+private fun estimateDraftJson(items: List<DepositItem>): String? {
+  if (items.isEmpty()) return null
+  val array = com.google.gson.JsonArray()
+  for (item in items) {
+    val weight = WeightInput.canonical(item.weightKg) ?: return null
+    array.add(com.google.gson.JsonObject().apply {
+      addProperty("category_id", item.categoryId)
+      addProperty("weight_kg", weight)
+    })
+  }
+  return array.toString()
+}
+
 @Composable
-fun EstimateRoute(accountUid: String, onBack: () -> Unit) {
+fun EstimateRoute(accountUid: String, onBack: () -> Unit, onCreateDeposit: ((String) -> Unit)? = null) {
   val vm: EstimateViewModel = viewModel(key = "estimate-$accountUid", factory = EstimateViewModel.Factory())
   val state by vm.state.collectAsStateWithLifecycle()
 
   Column(Modifier.fillMaxSize().background(Color.White)) {
-    DepositTopBar("Estimasi Poin", onBack)
+    Box(Modifier.padding(start = 12.dp, top = 8.dp)) { DepositBackLink(onBack) }
     when {
       state.loadingCategories -> LoadingBox("Memuat kategori...")
       state.categoriesError != null -> ErrorBox(state.categoriesError!!, vm::loadCategories, onBack)
       state.categories.isEmpty() -> ErrorBox("Server belum memiliki kategori sampah.", vm::loadCategories, onBack)
       else -> Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp),
       ) {
-        Notice("Ini hanya perkiraan dari tarif server saat ini. Poin sebenarnya dihitung ulang saat setoran dibuat dan baru masuk setelah QR diklaim.")
+        DepositPageTitle("Kalkulator Poin", "Pilih kategori dan masukkan berat sampah yang ditimbang")
+        Text(
+          "Masukkan berat sampah",
+          style = MaterialTheme.typography.headlineMedium.copy(fontSize = 22.sp, lineHeight = 30.sp),
+          color = EcoColor.Green900,
+        )
+        WeightHero(rememberTotalWeightText(state.rows))
         DepositItemsEditor(
           rows = state.rows,
           categories = state.categories,
@@ -128,27 +160,52 @@ fun EstimateRoute(accountUid: String, onBack: () -> Unit) {
           onAdd = vm::add,
           onRemove = vm::remove,
         )
+        Text(
+          "Maks. 1.000 kg total · 3 angka desimal · ${WeightInput.MAX_ITEMS} kategori",
+          fontSize = 10.sp,
+          color = EcoColor.Green700,
+        )
         state.validation?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = EcoColor.TextError) }
         EcoButton(
           text = if (state.estimating) "Menghitung..." else "Hitung Estimasi",
           onClick = vm::calculate,
           enabled = !state.estimating,
           modifier = Modifier.fillMaxWidth(),
+          containerColor = EcoColor.Green700,
         )
         state.error?.let { Notice(it, error = true) }
         state.estimate?.let { estimate ->
-          Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(
-              "Perkiraan ${estimate.estimatedPoints} poin",
-              style = MaterialTheme.typography.titleLarge,
-              color = EcoColor.Green900,
+          DepositCard {
+            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+              Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Icon(Lucide.Gamepad2, null, Modifier.size(48.dp), tint = EcoColor.Green700)
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                  Text("Perkiraan poin yang akan diberikan", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, lineHeight = 18.sp, color = EcoColor.Green900)
+                  Text("${estimate.estimatedPoints} poin", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = EcoColor.Green800)
+                  Text("dari ${DepositText.kg(estimate.totalWeightKg)}", fontSize = 10.sp, color = EcoColor.Green800)
+                }
+              }
+              HorizontalDivider(color = EcoColor.Green100)
+              LabelValue("Tarif per", DepositText.dateTime(estimate.asOf))
+              if (estimate.usesDemoRates) Notice("Memakai tarif demo/simulasi, bukan nilai tukar nyata.")
+              ItemLines(estimate.items)
+            }
+          }
+          val draftJson = remember(estimate) { if (onCreateDeposit == null) null else estimateDraftJson(estimate.items) }
+          if (draftJson != null) {
+            EcoButton(
+              text = "Lanjut Buat QR",
+              onClick = { onCreateDeposit?.invoke(draftJson) },
+              modifier = Modifier.fillMaxWidth(),
+              containerColor = EcoColor.Green700,
+              endIcon = { Icon(Lucide.ArrowRight, null, Modifier.size(20.dp)) },
             )
-            LabelValue("Total berat", DepositText.kg(estimate.totalWeightKg))
-            LabelValue("Tarif per", DepositText.dateTime(estimate.asOf))
-            if (estimate.usesDemoRates) Notice("Memakai tarif demo/simulasi, bukan nilai tukar nyata.")
-            ItemLines(estimate.items)
           }
         }
+        DepositInfoCard(
+          "Hanya perkiraan",
+          "Ini perkiraan dari tarif server saat ini. Poin sebenarnya dihitung ulang saat setoran dibuat dan baru masuk setelah QR diklaim.",
+        )
       }
     }
   }

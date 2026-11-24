@@ -1,5 +1,14 @@
 package com.example.ecosnap.features.deposits
 
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
+import com.composables.icons.lucide.ArrowRight
+import com.composables.icons.lucide.Lucide
+import com.composables.icons.lucide.QrCode
 import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -62,11 +71,30 @@ class PartnerDepositCreateViewModel(
   private val uid: String,
   private val repository: DepositRepository,
   private val store: PendingMutationStore,
+  private val initialItemsJson: String? = null,
 ) : ViewModel() {
   private val _state = MutableStateFlow(DepositCreateUiState())
   val state: StateFlow<DepositCreateUiState> = _state.asStateFlow()
   private var nextKey = 1L
   private var submitJob: Job? = null
+  private var draftConsumed = initialItemsJson == null
+
+  private class Draft(val rows: List<WeightRow>?, val message: String?)
+
+  /** Parses the estimate draft into rows; an invalid draft is ignored with a visible message. */
+  private fun parseDraft(): Draft? {
+    val json = initialItemsJson ?: return null
+    return try {
+      val array = com.google.gson.JsonParser.parseString(json).asJsonArray
+      if (array.size() == 0 || array.size() > WeightInput.MAX_ITEMS) throw IllegalArgumentException()
+      val rows = WeightRows.fromPayload(array, nextKey)
+      if (rows.any { WeightInput.canonical(it.weight) == null }) throw IllegalArgumentException()
+      nextKey += rows.size
+      Draft(rows, null)
+    } catch (_: RuntimeException) {
+      Draft(null, "Draf dari kalkulator tidak valid dan diabaikan. Isi kategori dan berat secara manual.")
+    }
+  }
 
   init {
     recover()
@@ -78,8 +106,14 @@ class PartnerDepositCreateViewModel(
     viewModelScope.launch {
       try {
         val pending = store.read(uid, SCOPE)
+        // A saved intent always wins over an incoming draft; the draft is applied at most once.
+        val draft = if (pending == null && !draftConsumed) parseDraft() else null
+        if (pending == null) draftConsumed = true
         _state.update { current ->
           when {
+            pending == null && draft != null && draft.rows != null ->
+              current.copy(recovering = false, rows = draft.rows)
+            pending == null && draft != null -> current.copy(recovering = false, validation = draft.message)
             pending == null -> current.copy(recovering = false)
             pending.resultId != null -> current.copy(recovering = false, completedId = pending.resultId)
             else -> current.copy(
@@ -240,12 +274,12 @@ class PartnerDepositCreateViewModel(
     return status in 400..499 && status != 401 && status != 408 && status != 429
   }
 
-  class Factory(private val uid: String, context: Context) : ViewModelProvider.Factory {
+  class Factory(private val uid: String, context: Context, private val initialItemsJson: String? = null) : ViewModelProvider.Factory {
     private val appContext = context.applicationContext
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T =
-      PartnerDepositCreateViewModel(uid, DepositRepository(), PendingMutationStore(appContext)) as T
+      PartnerDepositCreateViewModel(uid, DepositRepository(), PendingMutationStore(appContext), initialItemsJson) as T
   }
 
   private companion object {
@@ -254,11 +288,16 @@ class PartnerDepositCreateViewModel(
 }
 
 @Composable
-fun PartnerDepositCreateRoute(accountUid: String, onBack: () -> Unit, onCreated: (String) -> Unit) {
+fun PartnerDepositCreateRoute(
+  accountUid: String,
+  onBack: () -> Unit,
+  onCreated: (String) -> Unit,
+  initialItemsJson: String? = null,
+) {
   val context = LocalContext.current
   val vm: PartnerDepositCreateViewModel = viewModel(
     key = "partner-deposit-create-$accountUid",
-    factory = PartnerDepositCreateViewModel.Factory(accountUid, context),
+    factory = PartnerDepositCreateViewModel.Factory(accountUid, context, initialItemsJson),
   )
   val state by vm.state.collectAsStateWithLifecycle()
 
@@ -270,27 +309,41 @@ fun PartnerDepositCreateRoute(accountUid: String, onBack: () -> Unit, onCreated:
   }
 
   Column(Modifier.fillMaxSize().background(Color.White)) {
-    DepositTopBar("Buat Setoran", onBack)
     when {
       state.recovering || state.loadingCategories -> LoadingBox("Memuat...")
       state.recoverError != null -> ErrorBox(state.recoverError!!, vm::recover, onBack)
       state.categoriesError != null -> ErrorBox(state.categoriesError!!, vm::loadCategories, onBack)
       state.completedId != null -> Column(
-        Modifier.fillMaxSize().padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp),
       ) {
-        Notice("Setoran sudah dibuat server. Buka setoran tersebut untuk menerbitkan QR.")
-        EcoButton("Buka Setoran", vm::openCompleted, Modifier.fillMaxWidth())
+        DepositPageTitle("Generate QR", "Setoran sudah tercatat di server")
+        DepositCard {
+          Column(
+            Modifier.fillMaxWidth().padding(vertical = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+          ) {
+            Icon(Lucide.QrCode, null, Modifier.size(64.dp), tint = EcoColor.Green700)
+            Text("Setoran sudah dibuat", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = EcoColor.Green900)
+            Text(
+              "Setoran sudah dibuat server. Buka setoran tersebut untuk menerbitkan QR.",
+              fontSize = 12.sp,
+              lineHeight = 19.sp,
+              textAlign = TextAlign.Center,
+              color = EcoColor.Green800,
+            )
+            EcoButton("Buka Setoran", vm::openCompleted, Modifier.fillMaxWidth(), containerColor = EcoColor.Green700)
+          }
+        }
         state.error?.let { Notice(it, error = true) }
       }
       else -> Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp),
       ) {
-        Notice(
-          "Tarif poin dari server dapat berupa tarif demo dan dihitung ulang saat setoran dibuat. " +
-            "Setelah QR terbit, setoran dikunci dan tidak dapat diubah."
-        )
+        DepositPageTitle("Buat Setoran", "Pilih kategori dan masukkan berat sampah yang ditimbang")
+        WeightHero(rememberTotalWeightText(state.rows))
         DepositItemsEditor(
           rows = state.rows,
           categories = state.categories,
@@ -299,14 +352,26 @@ fun PartnerDepositCreateRoute(accountUid: String, onBack: () -> Unit, onCreated:
           onAdd = vm::add,
           onRemove = vm::remove,
         )
+        Text(
+          "Maks. 1.000 kg total · 3 angka desimal · ${WeightInput.MAX_ITEMS} kategori",
+          fontSize = 10.sp,
+          color = EcoColor.Green700,
+        )
         state.validation?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = EcoColor.TextError) }
         state.error?.let { Notice(it, error = true) }
+        DepositInfoCard(
+          "Poin dihitung server",
+          "Tarif poin dari server dapat berupa tarif demo dan dihitung ulang saat setoran dibuat. " +
+            "Setelah QR terbit, setoran dikunci dan tidak dapat diubah.",
+        )
         if (state.unresolved) {
           EcoButton(
             text = if (state.submitting) "Mengirim..." else "Kirim Ulang",
             onClick = vm::retryUnresolved,
             enabled = !state.submitting,
             modifier = Modifier.fillMaxWidth(),
+            containerColor = EcoColor.Green700,
+            endIcon = { Icon(Lucide.ArrowRight, null, Modifier.size(20.dp)) },
           )
         } else {
           EcoButton(
@@ -314,6 +379,8 @@ fun PartnerDepositCreateRoute(accountUid: String, onBack: () -> Unit, onCreated:
             onClick = vm::submit,
             enabled = !state.submitting,
             modifier = Modifier.fillMaxWidth(),
+            containerColor = EcoColor.Green700,
+            endIcon = { Icon(Lucide.ArrowRight, null, Modifier.size(20.dp)) },
           )
         }
       }

@@ -1,5 +1,20 @@
 package com.example.ecosnap.features.deposits
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.unit.sp
+import com.composables.icons.lucide.Clock3
+import com.composables.icons.lucide.Lucide
+import com.composables.icons.lucide.QrCode
+import com.composables.icons.lucide.TriangleAlert
 import android.graphics.Bitmap
 import android.graphics.Color as AndroidColor
 import android.os.SystemClock
@@ -189,48 +204,106 @@ fun DepositDetailRoute(
       deposit == null -> ErrorBox(state.error ?: "Setoran tidak dapat dimuat.", vm::retry, onBack)
       else -> Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp),
       ) {
-        Text(
-          if (isPartner) "Detail Setoran" else "Setoran Berhasil",
-          style = MaterialTheme.typography.headlineMedium,
-          color = EcoColor.Green900,
+        DepositPageTitle(
+          if (isPartner) "Generate QR" else "Setoran Berhasil",
+          if (isPartner) "Tunjukkan QR ini kepada pengguna" else "Setoran Anda sudah diklaim",
         )
         state.error?.let { Notice(it, error = true) }
-        ScanPointsCard(
-          label = if (isPartner) "Poin Setoran" else "Poin Diperoleh",
-          points = deposit.totalPoints,
-          weightKg = DepositText.kg(deposit.totalWeightKg),
-        )
-        if (deposit.usesDemoRates) Notice("Memakai tarif demo/simulasi, bukan nilai tukar nyata.")
-        LabelValue("ID Setoran", deposit.id)
-        LabelValue("Status", DepositText.status(deposit.status))
-        LabelValue("Dibuat", DepositText.dateTime(deposit.createdAt))
-        LabelValue("Tarif per", DepositText.dateTime(deposit.ratesAsOf))
-        ItemLines(deposit.items)
-
-        if (isPartner && deposit.status != "claimed") {
-          state.qr?.let { QrPanel(it, onExpired = vm::refresh) }
-          state.qrError?.let { Notice(it, error = true) }
-          EcoButton(
-            text = when {
-              state.qrBusy -> "Memproses..."
-              state.qr != null || deposit.status == "qr_issued" -> "Terbitkan Ulang QR"
-              else -> "Terbitkan QR"
-            },
-            onClick = { if (state.qr != null || deposit.status == "qr_issued") confirmReissue = true else vm.issueQr() },
-            enabled = !state.qrBusy,
-            modifier = Modifier.fillMaxWidth(),
+        if (isPartner) {
+          DepositSummaryCard(DepositText.kg(deposit.totalWeightKg), deposit.totalPoints, "Poin yang akan diterima")
+        } else {
+          ScanPointsCard(
+            label = "Poin Diperoleh",
+            points = deposit.totalPoints,
+            weightKg = DepositText.kg(deposit.totalWeightKg),
           )
         }
-        EcoButton(
-          text = if (state.refreshing) "Memuat..." else "Muat Ulang Status",
+        val claimable = isPartner && deposit.status != "claimed"
+        if (claimable) {
+          val qr = state.qr
+          if (qr != null) {
+            QrPanel(qr, deposit.id, onExpired = vm::refresh)
+          } else if (deposit.status == "qr_issued") {
+            DepositInfoCard(
+              "QR sudah pernah diterbitkan",
+              "Demi keamanan, token QR tidak disimpan setelah halaman ditutup. Terbitkan ulang untuk menampilkan QR baru; QR lama langsung tidak berlaku.",
+              icon = Lucide.QrCode,
+            )
+          } else {
+            DepositInfoCard(
+              "QR belum diterbitkan",
+              "Terbitkan QR lalu minta pengguna memindainya dengan aplikasi EcoSnap. Poin baru masuk setelah pengguna mengklaim.",
+              icon = Lucide.QrCode,
+            )
+          }
+          state.qrError?.let { Notice(it, error = true) }
+        } else if (isPartner) {
+          DepositInfoCard(
+            "Setoran sudah diklaim",
+            "Pengguna sudah mengklaim setoran ini. QR tidak berlaku lagi dan tidak dapat diterbitkan ulang.",
+          )
+        }
+        DepositCard {
+          Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text("Rincian Setoran", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = EcoColor.Green900)
+            if (deposit.usesDemoRates) Notice("Memakai tarif demo/simulasi, bukan nilai tukar nyata.")
+            LabelValue("ID Setoran", deposit.id)
+            LabelValue("Status", DepositText.status(deposit.status))
+            LabelValue("Dibuat", DepositText.dateTime(deposit.createdAt))
+            LabelValue("Tarif per", DepositText.dateTime(deposit.ratesAsOf))
+            HorizontalDivider(color = EcoColor.Green100)
+            ItemLines(deposit.items)
+          }
+        }
+        if (claimable) {
+          val hasQr = state.qr != null || deposit.status == "qr_issued"
+          Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (hasQr) {
+              OutlinedButton(
+                onClick = { confirmReissue = true },
+                enabled = !state.qrBusy,
+                modifier = Modifier.weight(1f).height(48.dp),
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.dp, EcoColor.Green900),
+                contentPadding = PaddingValues(horizontal = 8.dp),
+              ) {
+                Text(if (state.qrBusy) "Memproses..." else "Terbitkan Ulang QR", fontSize = 12.sp, color = EcoColor.Green900)
+              }
+              EcoButton("Selesai", onBack, Modifier.weight(1f), containerColor = EcoColor.Green700)
+            } else {
+              OutlinedButton(
+                onClick = onBack,
+                modifier = Modifier.weight(1f).height(48.dp),
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.dp, EcoColor.Green900),
+                contentPadding = PaddingValues(horizontal = 8.dp),
+              ) {
+                Text("Kembali", fontSize = 12.sp, color = EcoColor.Green900)
+              }
+              EcoButton(
+                text = if (state.qrBusy) "Memproses..." else "Terbitkan QR",
+                onClick = vm::issueQr,
+                modifier = Modifier.weight(1f),
+                enabled = !state.qrBusy,
+                containerColor = EcoColor.Green700,
+              )
+            }
+          }
+        }
+        OutlinedButton(
           onClick = vm::refresh,
           enabled = !state.refreshing,
-          modifier = Modifier.fillMaxWidth(),
-          containerColor = EcoColor.Green700,
-        )
-        TextButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Kembali") }
+          modifier = Modifier.fillMaxWidth().height(48.dp),
+          shape = RoundedCornerShape(16.dp),
+          border = BorderStroke(1.dp, EcoColor.Green900),
+        ) {
+          Text(if (state.refreshing) "Memuat..." else "Muat Ulang Status", fontSize = 12.sp, color = EcoColor.Green900)
+        }
+        if (!claimable) {
+          EcoButton("Selesai", onBack, Modifier.fillMaxWidth(), containerColor = EcoColor.Green700)
+        }
       }
     }
   }
@@ -252,7 +325,7 @@ fun DepositDetailRoute(
 }
 
 @Composable
-private fun QrPanel(qr: IssuedQr, onExpired: () -> Unit) {
+private fun QrPanel(qr: IssuedQr, depositId: String, onExpired: () -> Unit) {
   var remainingMs by remember(qr) { mutableLongStateOf(remaining(qr)) }
   LaunchedEffect(qr) {
     while (true) {
@@ -266,32 +339,89 @@ private fun QrPanel(qr: IssuedQr, onExpired: () -> Unit) {
   }
   val expired = remainingMs <= 0L
 
-  Column(
-    Modifier.fillMaxWidth().background(EcoColor.GreenSoft, RoundedCornerShape(20.dp)).padding(16.dp),
-    horizontalAlignment = Alignment.CenterHorizontally,
-    verticalArrangement = Arrangement.spacedBy(12.dp),
-  ) {
-    Notice(qr.warning, error = true)
-    if (expired) {
-      Text("QR kedaluwarsa. Terbitkan ulang untuk membuat QR baru.", color = EcoColor.TextError, textAlign = TextAlign.Center)
-    } else {
-      val bitmap by produceState<Bitmap?>(null, qr.token) {
-        value = withContext(Dispatchers.Default) { QrBitmap.create(qr.token, 640) }
-      }
-      bitmap?.let {
-        Image(
-          bitmap = it.asImageBitmap(),
-          contentDescription = "Kode QR setoran",
-          modifier = Modifier.size(240.dp).background(Color.White),
+  Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
+    DepositCard(contentPadding = PaddingValues(16.dp)) {
+      Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+      ) {
+        Text("Scan untuk Klaim Poin", fontSize = 17.sp, fontWeight = FontWeight.SemiBold, color = EcoColor.Green900)
+        Text(
+          "Minta pengguna memindai QR berikut\ndengan aplikasi EcoSnap.",
+          fontSize = 11.sp,
+          lineHeight = 16.sp,
+          textAlign = TextAlign.Center,
+          color = EcoColor.Green800,
         )
-      } ?: Spacer(Modifier.height(240.dp))
-      val seconds = (remainingMs + 999) / 1000
-      Text(
-        "Berlaku %d:%02d".format(seconds / 60, seconds % 60),
-        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-        color = EcoColor.Green900,
-      )
+        Spacer(Modifier.height(2.dp))
+        if (expired) {
+          Surface(
+            color = EcoColor.Green100,
+            shape = RoundedCornerShape(14.dp),
+            modifier = Modifier.fillMaxWidth().aspectRatio(1f),
+          ) {
+            Column(
+              horizontalAlignment = Alignment.CenterHorizontally,
+              verticalArrangement = Arrangement.Center,
+            ) {
+              Icon(Lucide.Clock3, null, Modifier.size(52.dp), tint = EcoColor.Green700)
+              Spacer(Modifier.height(14.dp))
+              Text("QR sudah kedaluwarsa", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = EcoColor.Green900)
+              Text(
+                "Terbitkan ulang QR untuk melanjutkan.",
+                Modifier.padding(top = 8.dp),
+                fontSize = 11.sp,
+                color = EcoColor.Green800,
+              )
+            }
+          }
+        } else {
+          val bitmap by produceState<Bitmap?>(null, qr.token) {
+            value = withContext(Dispatchers.Default) { QrBitmap.create(qr.token, 640) }
+          }
+          Surface(
+            shape = RoundedCornerShape(14.dp),
+            border = BorderStroke(2.dp, EcoColor.Green800),
+            color = EcoColor.White,
+            modifier = Modifier.fillMaxWidth().aspectRatio(1f),
+          ) {
+            Box(Modifier.padding(8.dp), contentAlignment = Alignment.Center) {
+              bitmap?.let {
+                Image(
+                  bitmap = it.asImageBitmap(),
+                  contentDescription = "Kode QR setoran",
+                  modifier = Modifier.fillMaxSize(),
+                  filterQuality = FilterQuality.None,
+                )
+              } ?: CircularProgressIndicator(color = EcoColor.Green700)
+            }
+          }
+        }
+        Text(depositId, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center, color = EcoColor.Green900)
+        Surface(color = EcoColor.Green700, shape = RoundedCornerShape(50)) {
+          Row(
+            Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+          ) {
+            Icon(Lucide.Clock3, null, Modifier.size(15.dp), tint = EcoColor.White)
+            val seconds = (remainingMs + 999) / 1000
+            Text(
+              if (expired) "Masa berlaku habis" else "Berlaku selama %02d:%02d".format(seconds / 60, seconds % 60),
+              fontSize = 11.sp,
+              color = EcoColor.White,
+            )
+          }
+        }
+      }
     }
+    DepositInfoCard(
+      title = if (expired) "QR belum diklaim" else "Peringatan keamanan",
+      text = qr.warning,
+      icon = Lucide.TriangleAlert,
+      error = true,
+    )
   }
 }
 

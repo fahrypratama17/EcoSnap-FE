@@ -18,6 +18,7 @@ import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.Map
 import com.composables.icons.lucide.ScanLine
 import com.example.ecosnap.core.auth.AccountProfile
+import com.example.ecosnap.core.designsystem.components.EcoAppHeader
 import com.example.ecosnap.core.designsystem.components.EcoBottomItem
 import com.example.ecosnap.core.designsystem.components.EcoBottomNavigation
 import com.example.ecosnap.features.articles.ArticleDetailRoute
@@ -144,14 +145,15 @@ fun NavGraphBuilder.mainNavGraph(
     }
 
     composable(Routes.POINTS) {
-      MainTabScaffold(navController, Routes.POINTS) {
+      MainTabScaffold(navController, Routes.POINTS, showHeader = true) {
         PointsRoute(
           accountUid = account.uid,
           onVoucher = { navController.navigate(Routes.voucherDetail(it)) },
           onHistory = { navController.navigate(Routes.HISTORY) },
           onVouchers = { navController.navigate(Routes.VOUCHERS) },
           onEstimate = { navController.navigate(Routes.ESTIMATE) },
-          onLeaderboard = { navController.navigate(Routes.DEPOSIT_LEADERBOARD) }
+          onLeaderboard = { navController.navigate(Routes.DEPOSIT_LEADERBOARD) },
+          onScanQr = { navController.navigate(Routes.SCAN_QR) }
         )
       }
     }
@@ -199,10 +201,19 @@ fun NavGraphBuilder.mainNavGraph(
 internal fun MainTabScaffold(
   navController: NavHostController,
   selectedRoute: String,
+  showHeader: Boolean = false,
   content: @Composable () -> Unit
 ) {
   Scaffold(
     containerColor = MaterialTheme.colorScheme.background,
+    topBar = {
+      if (showHeader) {
+        EcoAppHeader(
+          onNotifications = { navController.navigate(Routes.NOTIFICATION) { launchSingleTop = true } },
+          onProfile = { navController.navigate(Routes.PROFILE) { launchSingleTop = true } }
+        )
+      }
+    },
     bottomBar = {
       EcoBottomNavigation(
         items = bottomItems,

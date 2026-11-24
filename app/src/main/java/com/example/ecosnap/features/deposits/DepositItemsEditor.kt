@@ -1,5 +1,13 @@
 package com.example.ecosnap.features.deposits
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -78,36 +86,52 @@ fun DepositItemsEditor(
   modifier: Modifier = Modifier,
 ) {
   Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-    rows.forEach { row ->
-      Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
-        EcoDropdownField(
-          value = categories.firstOrNull { it.id == row.categoryId }?.name.orEmpty(),
-          onValueChange = { name ->
-            if (enabled) categories.firstOrNull { it.name == name }?.let { onChange(row.key, row.copy(categoryId = it.id)) }
-          },
-          label = "Kategori",
-          options = categories.map { it.name },
-          modifier = Modifier.weight(1.2f),
-        )
-        EcoTextField(
-          value = row.weight,
-          onValueChange = { if (enabled) onChange(row.key, row.copy(weight = it.take(9))) },
-          label = "Berat (kg)",
-          placeholder = "2,5",
-          keyboardType = KeyboardType.Decimal,
-          modifier = Modifier.weight(1f),
-        )
-        if (enabled && rows.size > 1) {
-          IconButton(onClick = { onRemove(row.key) }, modifier = Modifier.size(40.dp)) {
-            Icon(Lucide.X, contentDescription = "Hapus baris", tint = EcoColor.TextError)
+    rows.forEachIndexed { index, row ->
+      Surface(color = EcoColor.Green100, shape = RoundedCornerShape(18.dp)) {
+        Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+          Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+              "Item ${index + 1}",
+              modifier = Modifier.weight(1f),
+              fontSize = 13.sp,
+              fontWeight = FontWeight.SemiBold,
+              color = EcoColor.Green900,
+            )
+            if (enabled && rows.size > 1) {
+              IconButton(onClick = { onRemove(row.key) }, modifier = Modifier.size(32.dp)) {
+                Icon(Lucide.X, contentDescription = "Hapus baris ${index + 1}", tint = EcoColor.TextError, modifier = Modifier.size(18.dp))
+              }
+            }
           }
+          EcoDropdownField(
+            value = categories.firstOrNull { it.id == row.categoryId }?.name.orEmpty(),
+            onValueChange = { name ->
+              if (enabled) categories.firstOrNull { it.name == name }?.let { onChange(row.key, row.copy(categoryId = it.id)) }
+            },
+            label = "Kategori",
+            options = categories.map { it.name },
+            modifier = Modifier.fillMaxWidth(),
+          )
+          EcoTextField(
+            value = row.weight,
+            onValueChange = { if (enabled) onChange(row.key, row.copy(weight = it.take(9))) },
+            label = "Berat (kg)",
+            placeholder = "2,5",
+            keyboardType = KeyboardType.Decimal,
+            modifier = Modifier.fillMaxWidth(),
+          )
         }
       }
     }
     if (enabled && rows.size < WeightInput.MAX_ITEMS) {
-      TextButton(onClick = onAdd) {
-        Icon(Lucide.Plus, contentDescription = null, modifier = Modifier.size(16.dp), tint = EcoColor.Green700)
-        Text("  Tambah kategori", color = EcoColor.Green700)
+      OutlinedButton(
+        onClick = onAdd,
+        modifier = Modifier.fillMaxWidth().height(48.dp),
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, EcoColor.Green900),
+      ) {
+        Icon(Lucide.Plus, contentDescription = null, modifier = Modifier.size(16.dp), tint = EcoColor.Green900)
+        Text("  Tambah kategori", fontSize = 12.sp, color = EcoColor.Green900)
       }
     }
   }

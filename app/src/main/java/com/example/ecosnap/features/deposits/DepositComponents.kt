@@ -17,6 +17,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.ui.unit.sp
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -80,8 +81,8 @@ internal fun Notice(text: String, modifier: Modifier = Modifier, error: Boolean 
     text,
     modifier = modifier
       .fillMaxWidth()
-      .background(if (error) Color(0xFFFBE9E7) else Color(0xFFFFF4D6), RoundedCornerShape(12.dp))
-      .padding(12.dp),
+      .background(if (error) Color(0xFFFBE9E7) else EcoColor.Green100, RoundedCornerShape(16.dp))
+      .padding(14.dp),
     style = MaterialTheme.typography.bodyMedium,
     color = if (error) EcoColor.TextError else EcoColor.Green900,
   )
@@ -94,14 +95,18 @@ internal fun ItemLines(items: List<DepositItem>) {
       if (index > 0) HorizontalDivider(color = EcoColor.Green100)
       Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         Column(Modifier.weight(1f)) {
-          Text(item.categoryName, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold), color = EcoColor.Green900)
+          Text(item.categoryName, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold, fontSize = 13.sp), color = EcoColor.Green900)
           Text(
             "${DepositText.kg(item.weightKg)} x ${item.pointsPerKg.replace('.', ',')} poin/kg" + if (item.isDemo) " (tarif demo)" else "",
-            style = MaterialTheme.typography.bodyMedium,
-            color = EcoColor.Green700,
+            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 11.sp),
+            color = EcoColor.Green800,
           )
         }
-        Text("${item.exactPoints.replace('.', ',')} poin", style = MaterialTheme.typography.bodyMedium, color = EcoColor.Green900)
+        Text(
+          "${item.exactPoints.replace('.', ',')} poin",
+          style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, fontSize = 13.sp),
+          color = EcoColor.Green800,
+        )
       }
     }
   }

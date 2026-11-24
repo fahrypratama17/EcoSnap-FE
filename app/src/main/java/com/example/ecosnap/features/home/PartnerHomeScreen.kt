@@ -9,8 +9,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,17 +24,30 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.composables.icons.lucide.Bell
+import com.composables.icons.lucide.History
+import com.composables.icons.lucide.Info
+import com.composables.icons.lucide.LogOut
+import com.composables.icons.lucide.Lucide
+import com.composables.icons.lucide.Map
+import com.composables.icons.lucide.QrCode
+import com.composables.icons.lucide.RotateCcw
+import com.composables.icons.lucide.Scale
+import com.composables.icons.lucide.UserRound
 import com.example.ecosnap.core.auth.AccountProfile
-import com.example.ecosnap.core.auth.BusinessProfile
 import com.example.ecosnap.core.designsystem.components.EcoButton
-import com.example.ecosnap.core.designsystem.components.EcoCard
 import com.example.ecosnap.core.designsystem.theme.EcoColor
+import com.example.ecosnap.features.home.components.PartnerCard
+import com.example.ecosnap.features.home.components.PartnerMenuCard
+import com.example.ecosnap.features.home.components.PartnerPanel
+import com.example.ecosnap.features.home.components.PartnerStat
 import com.example.ecosnap.features.home.model.PartnerHomeData
 
 /**
@@ -97,166 +112,236 @@ fun PartnerHomeScreen(
     modifier = modifier
       .fillMaxSize()
       .background(Color.White),
-    contentPadding = PaddingValues(16.dp),
-    verticalArrangement = Arrangement.spacedBy(12.dp)
+    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
+    verticalArrangement = Arrangement.spacedBy(14.dp)
   ) {
     item {
-      Column {
-        Text(text = "Selamat datang kembali!", fontSize = 12.sp, color = EcoColor.Green700)
-        Spacer(Modifier.height(3.dp))
+      Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+        Text("Selamat datang kembali!", fontSize = 11.sp, color = EcoColor.Green900)
         Text(
           text = "Halo, ${account.displayName.ifBlank { account.fullName }}!",
-          style = MaterialTheme.typography.titleLarge.copy(fontSize = 23.sp, lineHeight = 29.sp),
+          style = MaterialTheme.typography.headlineMedium.copy(fontSize = 23.sp, lineHeight = 30.sp),
           color = EcoColor.Green900
         )
-      }
-    }
-
-    account.business?.let { business ->
-      item { BusinessCard(business) }
-    }
-
-    when {
-      state.isLoading -> item {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-          CircularProgressIndicator(color = EcoColor.Green700)
-        }
-      }
-
-      state.depositForbidden -> item {
-        EcoCard(modifier = Modifier.fillMaxWidth()) {
-          Text(
-            text = "Ringkasan setoran belum tersedia",
-            style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp),
-            color = EcoColor.Green900
-          )
-          Spacer(Modifier.height(4.dp))
-          Text(
-            text = "Akun mitra Anda belum memiliki lokasi terverifikasi, atau masih menunggu verifikasi. " +
-              "Ringkasan akan muncul setelah akun diverifikasi. Gunakan tombol muat ulang akun untuk " +
-              "memeriksa status terbaru.",
-            fontSize = 12.sp,
-            lineHeight = 18.sp,
-            color = EcoColor.Green700
-          )
-        }
-      }
-
-      state.data != null -> item { SummaryCard(state.data) }
-
-      else -> item {
-        Column {
-          Text(
-            text = state.error ?: "Ringkasan mitra belum dapat dimuat.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = EcoColor.TextError
-          )
-          Spacer(Modifier.height(6.dp))
-          EcoButton(text = "Coba lagi", onClick = onRetry, height = 40.dp, modifier = Modifier.fillMaxWidth())
-        }
-      }
-    }
-
-    if (state.data != null && state.error != null) {
-      item {
-        Column {
-          Text(text = state.error, style = MaterialTheme.typography.bodyMedium, color = EcoColor.TextError)
-          Spacer(Modifier.height(6.dp))
-          EcoButton(text = "Muat ulang ringkasan", onClick = onRetry, height = 40.dp)
-        }
-      }
-    }
-
-    item {
-      Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (state.data?.partnerStatus == "verified") {
-          EcoButton(text = "Buat setoran", onClick = onCreateDeposit, modifier = Modifier.fillMaxWidth())
-        }
-        EcoButton(text = "Riwayat setoran", onClick = onDeposits, modifier = Modifier.fillMaxWidth())
-        EcoButton(text = "Kalkulator estimasi", onClick = onEstimate, modifier = Modifier.fillMaxWidth())
-        EcoButton(text = "Notifikasi", onClick = onNotifications, modifier = Modifier.fillMaxWidth())
-        EcoButton(text = "Profil & pengaturan", onClick = onProfile, modifier = Modifier.fillMaxWidth())
-        EcoButton(text = "Muat ulang akun", onClick = onRefreshAccount, modifier = Modifier.fillMaxWidth())
-        EcoButton(text = "Telusuri mitra", onClick = onBrowsePartners, modifier = Modifier.fillMaxWidth())
-        EcoButton(
-          text = "Keluar",
-          onClick = onLogout,
-          modifier = Modifier.fillMaxWidth(),
-          containerColor = EcoColor.Green100,
-          contentColor = EcoColor.Green900
-        )
-      }
-    }
-  }
-}
-
-@Composable
-private fun BusinessCard(business: BusinessProfile) {
-  EcoCard(modifier = Modifier.fillMaxWidth()) {
-    Text(
-      text = business.name,
-      style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
-      color = EcoColor.Green900
-    )
-    Text(text = business.category, fontSize = 12.sp, color = EcoColor.Green700)
-    Spacer(Modifier.height(4.dp))
-    Text(text = "Status akun: ${partnerStatusLabel(business.status)}", fontSize = 12.sp, color = EcoColor.Green800)
-  }
-}
-
-@Composable
-private fun SummaryCard(data: PartnerHomeData) {
-  EcoCard(modifier = Modifier.fillMaxWidth()) {
-    Text(
-      text = "Ringkasan mitra",
-      style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp),
-      color = EcoColor.Green900
-    )
-    Spacer(Modifier.height(4.dp))
-    Text(
-      text = "Status lokasi: ${partnerStatusLabel(data.partnerStatus)}",
-      fontSize = 12.sp,
-      color = EcoColor.Green800
-    )
-    if (data.partnerStatus != "verified") {
-      Text(
-        text = "Pembuatan setoran dan QR hanya tersedia untuk lokasi terverifikasi.",
-        fontSize = 12.sp,
-        color = EcoColor.Green700
-      )
-    }
-    Spacer(Modifier.height(8.dp))
-    SummaryLine("Setoran dibuat", data.created.toString())
-    SummaryLine("QR diterbitkan", data.qrIssued.toString())
-    SummaryLine("Setoran diklaim", data.claimed.toString())
-    SummaryLine("Berat terklaim", "${data.claimedWeightKg} kg")
-    SummaryLine("Poin terklaim", data.claimedPoints.toString())
-
-    Spacer(Modifier.height(10.dp))
-    Text(text = "Setoran terbaru", fontSize = 13.sp, color = EcoColor.Green900)
-    if (data.recentDeposits.isEmpty()) {
-      Text(text = "Belum ada setoran.", fontSize = 12.sp, color = EcoColor.Green700)
-    } else {
-      data.recentDeposits.forEach { deposit ->
-        val date = formatServerTime(deposit.createdAt, "d MMM yyyy HH.mm")
-        Spacer(Modifier.height(4.dp))
         Text(
-          text = "${depositStatusLabel(deposit.status)} • ${deposit.totalWeightKg} kg • " +
-            "${deposit.totalPoints} poin" + if (date != null) " • $date" else "",
-          fontSize = 12.sp,
-          lineHeight = 16.sp,
+          text = "Kelola penyetoran sampah dengan mudah melalui EcoSnap.",
+          style = MaterialTheme.typography.bodyMedium.copy(fontSize = 11.sp, lineHeight = 17.sp),
           color = EcoColor.Green700
         )
       }
     }
+
+    item {
+      val statusRaw = state.data?.partnerStatus ?: account.business?.status
+      PartnerPanel(
+        title = state.data?.businessName?.ifBlank { null } ?: account.business?.name ?: "Siap menerima setoran?",
+        subtitle = account.business?.category?.ifBlank { null }
+          ?: "Timbang sampah, hitung poin, lalu buat QR untuk pengguna.",
+        statusLabel = statusRaw?.let { "Status: ${partnerStatusLabel(it)}" }
+      ) {
+        PartnerPanelSummary(state = state, onRetry = onRetry)
+      }
+    }
+
+    state.data?.let { data ->
+      if (state.error != null) {
+        item {
+          Column {
+            Text(text = state.error, style = MaterialTheme.typography.bodyMedium, color = EcoColor.TextError)
+            Spacer(Modifier.height(6.dp))
+            EcoButton(text = "Muat ulang ringkasan", onClick = onRetry, height = 40.dp)
+          }
+        }
+      }
+      item { RecentDepositsCard(data) }
+    }
+
+    val canCreate = state.data?.partnerStatus == "verified"
+    item {
+      Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text("Menu Utama", fontSize = 17.sp, fontWeight = FontWeight.SemiBold, color = EcoColor.Green900)
+        Spacer(Modifier.weight(1f))
+        Text(if (canCreate) "4 Fitur" else "3 Fitur", fontSize = 11.sp, color = EcoColor.Green700)
+      }
+    }
+    item {
+      PartnerMenuCard(
+        title = "Kalkulator Sampah",
+        description = "Hitung berat sampah dan estimasi poin yang diberikan",
+        action = "Buka Kalkulator",
+        icon = Lucide.Scale,
+        onClick = onEstimate
+      )
+    }
+    if (canCreate) {
+      item {
+        PartnerMenuCard(
+          title = "Generate QR",
+          description = "Buat setoran dan QR transaksi agar pengguna bisa mengklaim poin",
+          action = "Buat Setoran",
+          icon = Lucide.QrCode,
+          onClick = onCreateDeposit
+        )
+      }
+    }
+    item {
+      PartnerMenuCard(
+        title = "Riwayat Setoran",
+        description = "Lihat setoran yang dibuat, QR diterbitkan, dan yang sudah diklaim",
+        action = "Buka Riwayat",
+        icon = Lucide.History,
+        onClick = onDeposits
+      )
+    }
+    item {
+      PartnerMenuCard(
+        title = "Telusuri Mitra",
+        description = "Lihat daftar dan lokasi mitra EcoSnap",
+        action = "Buka Peta Mitra",
+        icon = Lucide.Map,
+        onClick = onBrowsePartners
+      )
+    }
+
+    item {
+      Text("Akun", fontSize = 17.sp, fontWeight = FontWeight.SemiBold, color = EcoColor.Green900)
+    }
+    item {
+      PartnerMenuCard(
+        title = "Notifikasi",
+        description = "Pantau pemberitahuan terbaru untuk akun mitra",
+        action = "Buka Notifikasi",
+        icon = Lucide.Bell,
+        onClick = onNotifications
+      )
+    }
+    item {
+      PartnerMenuCard(
+        title = "Profil & Pengaturan",
+        description = "Kelola data akun dan pengaturan aplikasi",
+        action = "Buka Profil",
+        icon = Lucide.UserRound,
+        onClick = onProfile
+      )
+    }
+    item {
+      PartnerMenuCard(
+        title = "Muat Ulang Akun",
+        description = "Periksa status verifikasi dan data akun terbaru",
+        action = "Muat Ulang",
+        icon = Lucide.RotateCcw,
+        onClick = onRefreshAccount
+      )
+    }
+    item {
+      PartnerMenuCard(
+        title = "Keluar",
+        description = "Akhiri sesi mitra di perangkat ini",
+        action = "Keluar dari Akun",
+        icon = Lucide.LogOut,
+        onClick = onLogout
+      )
+    }
+
+    item {
+      PartnerCard {
+        Row(
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+          Icon(Lucide.Info, null, Modifier.size(20.dp), tint = EcoColor.Green900)
+          Text("Cara Kerja EcoSnap Mitra", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = EcoColor.Green900)
+        }
+        Spacer(Modifier.height(14.dp))
+        listOf(
+          "1. Masukkan hasil penimbangan sampah.",
+          "2. Periksa jumlah poin yang akan diberikan.",
+          "3. Generate QR dan minta pengguna memindainya."
+        ).forEach {
+          Text(it, fontSize = 11.sp, lineHeight = 22.sp, color = EcoColor.Green800)
+        }
+      }
+    }
+  }
+}
+
+/** Inner summary of the PANEL MITRA card: loading, forbidden/pending, error, or real server counters. */
+@Composable
+private fun PartnerPanelSummary(state: PartnerHomeUiState, onRetry: () -> Unit) {
+  val data = state.data
+  when {
+    state.isLoading -> Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+      CircularProgressIndicator(color = EcoColor.Green700)
+    }
+
+    state.depositForbidden -> Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+      Text(
+        text = "Ringkasan setoran belum tersedia",
+        fontSize = 13.sp,
+        fontWeight = FontWeight.Bold,
+        color = EcoColor.Green900
+      )
+      Text(
+        text = "Akun mitra Anda belum memiliki lokasi terverifikasi, atau masih menunggu verifikasi. " +
+          "Ringkasan akan muncul setelah akun diverifikasi. Gunakan tombol muat ulang akun untuk " +
+          "memeriksa status terbaru.",
+        fontSize = 11.sp,
+        lineHeight = 16.sp,
+        color = EcoColor.Green800
+      )
+    }
+
+    data != null -> Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+      Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        PartnerStat("Poin terklaim", data.claimedPoints.toString(), "Poin", Modifier.weight(1f))
+        PartnerStat("Berat terklaim", "${data.claimedWeightKg} kg", "Total", end = true)
+      }
+      Row(Modifier.fillMaxWidth()) {
+        PartnerStat("Dibuat", data.created.toString(), "Setoran", Modifier.weight(1f))
+        PartnerStat("QR diterbitkan", data.qrIssued.toString(), "Setoran", Modifier.weight(1f))
+        PartnerStat("Diklaim", data.claimed.toString(), "Setoran", Modifier.weight(1f), end = true)
+      }
+      if (data.partnerStatus != "verified") {
+        Text(
+          text = "Pembuatan setoran dan QR hanya tersedia untuk lokasi terverifikasi.",
+          fontSize = 11.sp,
+          lineHeight = 15.sp,
+          color = EcoColor.Green800
+        )
+      }
+    }
+
+    else -> Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+      Text(
+        text = state.error ?: "Ringkasan mitra belum dapat dimuat.",
+        style = MaterialTheme.typography.bodyMedium,
+        color = EcoColor.TextError
+      )
+      EcoButton(text = "Coba lagi", onClick = onRetry, height = 40.dp, modifier = Modifier.fillMaxWidth())
+    }
   }
 }
 
 @Composable
-private fun SummaryLine(label: String, value: String) {
-  Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-    Text(text = label, fontSize = 12.sp, color = EcoColor.Green700, modifier = Modifier.weight(1f))
-    Text(text = value, fontSize = 13.sp, color = EcoColor.Green900)
+private fun RecentDepositsCard(data: PartnerHomeData) {
+  PartnerCard {
+    Text("Setoran terbaru", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = EcoColor.Green900)
+    if (data.recentDeposits.isEmpty()) {
+      Spacer(Modifier.height(4.dp))
+      Text(text = "Belum ada setoran.", fontSize = 11.sp, color = EcoColor.Green700)
+    } else {
+      data.recentDeposits.forEach { deposit ->
+        val date = formatServerTime(deposit.createdAt, "d MMM yyyy HH.mm")
+        Spacer(Modifier.height(6.dp))
+        Text(
+          text = "${depositStatusLabel(deposit.status)} • ${deposit.totalWeightKg} kg • " +
+            "${deposit.totalPoints} poin" + if (date != null) " • $date" else "",
+          fontSize = 11.sp,
+          lineHeight = 16.sp,
+          color = EcoColor.Green800
+        )
+      }
+    }
   }
 }
 

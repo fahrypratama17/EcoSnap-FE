@@ -19,8 +19,11 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import androidx.compose.ui.platform.LocalContext
 import com.example.ecosnap.features.photos.CameraScreen
 import com.example.ecosnap.features.photos.PhotoResultScreen
+import com.example.ecosnap.features.photos.PhotoReviewScreen
+import com.example.ecosnap.features.photos.deleteOwnedReviewImage
 
 fun NavGraphBuilder.photoNavGraph(
   navController: NavHostController
@@ -36,11 +39,56 @@ fun NavGraphBuilder.photoNavGraph(
         },
         onImageReady = { photoUri ->
           navController.navigate(
-            Routes.scanResult(photoUri)
+            Routes.scanReview(photoUri)
           ) {
             launchSingleTop = true
           }
         }
+      )
+    }
+  }
+  composable(
+    route = "${Routes.SCAN_REVIEW}?photoUri={photoUri}",
+    arguments = listOf(
+      navArgument("photoUri") {
+        type = NavType.StringType
+        defaultValue = ""
+      }
+    )
+  ) { backStackEntry ->
+    val context = LocalContext.current
+    val photoUri = backStackEntry.arguments
+      ?.getString("photoUri")
+      .orEmpty()
+      .takeIf { it.isNotBlank() }
+      ?.let(Uri::parse)
+
+    // Abandoning the review (retake / cancel / back) deletes only this app's own cache copy.
+    // Confirming hands the file to PhotoResultScreen's PhotoScanViewModel, which deletes it on clear.
+    val abandon = {
+      deleteOwnedReviewImage(context, photoUri)
+      if (!navController.popBackStack(Routes.SCAN, inclusive = false)) {
+        navController.popBackStack()
+      }
+      Unit
+    }
+
+    MainTabScaffold(
+      navController = navController,
+      selectedRoute = Routes.SCAN
+    ) {
+      PhotoReviewScreen(
+        photoUri = photoUri,
+        onAnalyze = {
+          if (photoUri != null) {
+            navController.navigate(Routes.scanResult(photoUri)) {
+              popUpTo("${Routes.SCAN_REVIEW}?photoUri={photoUri}") { inclusive = true }
+              launchSingleTop = true
+            }
+          }
+        },
+        onRetake = abandon,
+        onCancel = abandon
       )
     }
   }

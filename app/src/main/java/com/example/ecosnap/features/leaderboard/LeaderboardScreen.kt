@@ -14,18 +14,20 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.composables.icons.lucide.ArrowLeft
@@ -34,10 +36,11 @@ import com.example.ecosnap.core.designsystem.components.EcoAppHeader
 import com.example.ecosnap.core.designsystem.components.EcoButton
 import com.example.ecosnap.core.designsystem.components.EcoCard
 import com.example.ecosnap.core.designsystem.theme.EcoColor
-import com.example.ecosnap.features.gamification.LeaderboardEntry
 import com.example.ecosnap.features.gamification.remainingPeriodLabel
 import com.example.ecosnap.features.home.formatServerTime
-import com.example.ecosnap.features.leaderboard.components.LeaderboardAvatar
+import com.example.ecosnap.features.leaderboard.components.LeaderboardMyRankCard
+import com.example.ecosnap.features.leaderboard.components.LeaderboardPodiumCard
+import com.example.ecosnap.features.leaderboard.components.LeaderboardRankingCard
 
 @Composable
 fun LeaderboardScreen(
@@ -48,6 +51,7 @@ fun LeaderboardScreen(
   onProfile: () -> Unit,
   modifier: Modifier = Modifier
 ) {
+  var rankingExpanded by rememberSaveable { mutableStateOf(false) }
   Column(
     modifier = modifier
       .fillMaxSize()
@@ -130,26 +134,11 @@ fun LeaderboardScreen(
           }
         }
 
-        item {
-          val me = board.me
-          EcoCard(modifier = Modifier.fillMaxWidth()) {
-            Text("Peringkat Kamu", style = MaterialTheme.typography.titleMedium, color = EcoColor.Green900)
-            Spacer(Modifier.height(6.dp))
-            if (me != null) {
-              Text(
-                text = "#${me.rank} • ${me.xp} XP",
-                style = MaterialTheme.typography.titleMedium,
-                color = EcoColor.Green800
-              )
-            } else {
-              Text(
-                text = "Kamu belum tampil di daftar: belum ada XP minggu ini atau tampil di leaderboard dinonaktifkan.",
-                fontSize = 12.sp,
-                color = EcoColor.Green700
-              )
-            }
-          }
+        if (board.entries.isNotEmpty()) {
+          item { LeaderboardPodiumCard(topEntries = board.entries) }
         }
+
+        item { LeaderboardMyRankCard(me = board.me) }
 
         if (board.entries.isEmpty()) {
           item {
@@ -159,43 +148,16 @@ fun LeaderboardScreen(
               color = EcoColor.Green700
             )
           }
+        } else if (board.entries.size > 3) {
+          item {
+            LeaderboardRankingCard(
+              entries = board.entries.drop(3),
+              expanded = rankingExpanded,
+              onExpandChange = { rankingExpanded = it }
+            )
+          }
         }
-
-        itemsIndexed(board.entries, key = { index, _ -> index }) { _, entry -> EntryRow(entry) }
       }
     }
   }
-}
-
-@Composable
-private fun EntryRow(entry: LeaderboardEntry) {
-  EcoCard(modifier = Modifier.fillMaxWidth()) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-      Text(
-        text = "#${entry.rank}",
-        style = MaterialTheme.typography.titleMedium,
-        color = EcoColor.Green900,
-        modifier = Modifier.width(48.dp)
-      )
-      LeaderboardAvatar(initials = initialsOf(entry.displayName), size = 40.dp)
-      Spacer(Modifier.width(12.dp))
-      Text(
-        text = entry.displayName,
-        style = MaterialTheme.typography.labelLarge,
-        color = EcoColor.Green900,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-        modifier = Modifier.weight(1f)
-      )
-      Spacer(Modifier.width(8.dp))
-      Text("${entry.xp} XP", style = MaterialTheme.typography.titleMedium, color = EcoColor.Green800)
-    }
-  }
-}
-
-private fun initialsOf(name: String): String {
-  val parts = name.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
-  if (parts.isEmpty()) return "?"
-  val letters = parts.take(2).mapNotNull { it.codePoints().findFirst().let { cp -> if (cp.isPresent) String(Character.toChars(cp.asInt)) else null } }
-  return letters.joinToString("").uppercase()
 }
