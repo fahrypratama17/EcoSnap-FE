@@ -69,10 +69,6 @@ fun GamePlayScreen(
     mutableStateOf(0)
   }
 
-  var earnedXp by rememberSaveable(game.id) {
-    mutableStateOf(0)
-  }
-
   var isFinished by rememberSaveable(game.id) {
     mutableStateOf(false)
   }
@@ -95,13 +91,11 @@ fun GamePlayScreen(
       result = GameResult(
         correctAnswers = correctCount,
         totalQuestions = questions.size,
-        earnedXp = earnedXp
       ),
       onReplay = {
         currentIndex = 0
         selectedAnswer = null
         correctCount = 0
-        earnedXp = 0
         isFinished = false
       },
       onAllGames = onAllGames,
@@ -265,7 +259,6 @@ fun GamePlayScreen(
                         option == question.correctAnswer
                       ) {
                         correctCount += 1
-                        earnedXp += game.xpPerCorrect
                       }
                     }
                   },
@@ -286,11 +279,6 @@ fun GamePlayScreen(
           GameFeedbackCard(
             isCorrect = isCorrect,
             explanation = question.explanation,
-            earnedXp = if (isCorrect) {
-              game.xpPerCorrect
-            } else {
-              0
-            }
           )
         } else {
           EcoCard (

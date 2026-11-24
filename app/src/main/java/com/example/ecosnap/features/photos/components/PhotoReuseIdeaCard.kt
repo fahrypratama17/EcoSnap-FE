@@ -67,7 +67,7 @@ fun PhotoReuseIdeaCard(
         Spacer(Modifier.height(4.dp))
 
         Text(
-          text = idea.description,
+          text = "${idea.difficulty} · ${idea.description}",
           style = MaterialTheme.typography.bodyMedium.copy(
             fontSize = 12.sp,
             lineHeight = 17.sp
@@ -158,7 +158,7 @@ fun PhotoReuseIdeaCard(
         Spacer(Modifier.width(8.dp))
 
         Text(
-          text = "Gunakan alat tajam dengan hati-hati. Anak-anak perlu pendampingan orang dewasa.",
+          text = idea.safetyWarning,
           style = MaterialTheme.typography.bodyMedium.copy(
             fontSize = 11.sp,
             lineHeight = 16.sp

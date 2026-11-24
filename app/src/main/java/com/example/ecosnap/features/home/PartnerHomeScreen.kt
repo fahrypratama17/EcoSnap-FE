@@ -44,7 +44,12 @@ fun PartnerHomeRoute(
   account: AccountProfile,
   onRefreshAccount: () -> Unit,
   onBrowsePartners: () -> Unit,
-  onLogout: () -> Unit
+  onLogout: () -> Unit,
+  onCreateDeposit: () -> Unit,
+  onDeposits: () -> Unit,
+  onNotifications: () -> Unit,
+  onProfile: () -> Unit,
+  onEstimate: () -> Unit
 ) {
   val viewModel: PartnerHomeViewModel =
     viewModel(key = "partner-home-${account.uid}", factory = PartnerHomeViewModelFactory())
@@ -64,7 +69,12 @@ fun PartnerHomeRoute(
     onRetry = viewModel::refresh,
     onRefreshAccount = onRefreshAccount,
     onBrowsePartners = onBrowsePartners,
-    onLogout = onLogout
+    onLogout = onLogout,
+    onCreateDeposit = onCreateDeposit,
+    onDeposits = onDeposits,
+    onNotifications = onNotifications,
+    onProfile = onProfile,
+    onEstimate = onEstimate
   )
 }
 
@@ -76,6 +86,11 @@ fun PartnerHomeScreen(
   onRefreshAccount: () -> Unit,
   onBrowsePartners: () -> Unit,
   onLogout: () -> Unit,
+  onCreateDeposit: () -> Unit,
+  onDeposits: () -> Unit,
+  onNotifications: () -> Unit,
+  onProfile: () -> Unit,
+  onEstimate: () -> Unit,
   modifier: Modifier = Modifier
 ) {
   LazyColumn(
@@ -154,6 +169,13 @@ fun PartnerHomeScreen(
 
     item {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (state.data?.partnerStatus == "verified") {
+          EcoButton(text = "Buat setoran", onClick = onCreateDeposit, modifier = Modifier.fillMaxWidth())
+        }
+        EcoButton(text = "Riwayat setoran", onClick = onDeposits, modifier = Modifier.fillMaxWidth())
+        EcoButton(text = "Kalkulator estimasi", onClick = onEstimate, modifier = Modifier.fillMaxWidth())
+        EcoButton(text = "Notifikasi", onClick = onNotifications, modifier = Modifier.fillMaxWidth())
+        EcoButton(text = "Profil & pengaturan", onClick = onProfile, modifier = Modifier.fillMaxWidth())
         EcoButton(text = "Muat ulang akun", onClick = onRefreshAccount, modifier = Modifier.fillMaxWidth())
         EcoButton(text = "Telusuri mitra", onClick = onBrowsePartners, modifier = Modifier.fillMaxWidth())
         EcoButton(

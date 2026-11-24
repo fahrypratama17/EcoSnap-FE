@@ -140,7 +140,7 @@ fun GamesCatalogScreen(
               Spacer(Modifier.height(6.dp))
 
               Text(
-                text = "Pilih tantangan, kumpulkan XP, dan tingkatkan pengetahuanmu!",
+                text = "Pilih latihan offline untuk menambah pengetahuanmu. Tidak ada XP atau poin dari game.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = EcoColor.Green100
               )
@@ -246,7 +246,7 @@ fun GamesCatalogScreen(
               Spacer(Modifier.height(4.dp))
 
               Text(
-                text = "XP dari mini games digunakan untuk pencapaian dan leaderboard Games, bukan saldo EcoPoints dari penyetoran.",
+                text = "Mini game berjalan offline di perangkat dan tidak memberi XP, EcoPoints, atau peringkat. XP mingguan hanya berasal dari klaim misi server.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = EcoColor.Green700
               )

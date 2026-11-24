@@ -19,18 +19,20 @@ import androidx.navigation.compose.composable
 import com.example.ecosnap.features.games.GameDetailScreen
 import com.example.ecosnap.features.games.GamePlayScreen
 import com.example.ecosnap.features.games.GamesCatalogScreen
-import com.example.ecosnap.features.games.GamesHomeScreen
+import com.example.ecosnap.features.games.GamesRoute
 import com.example.ecosnap.features.games.data.LocalGames
 
 fun NavGraphBuilder.gamesNavGraph(
-  navController: NavHostController
+  navController: NavHostController,
+  accountUid: String
 ) {
   composable(Routes.GAMES) {
     MainTabScaffold(
       navController = navController,
       selectedRoute = Routes.GAMES
     ) {
-      GamesHomeScreen(
+      GamesRoute(
+        accountUid = accountUid,
         onAllGames = {
           navController.navigate(Routes.GAMES_ALL)
         },
@@ -41,6 +43,10 @@ fun NavGraphBuilder.gamesNavGraph(
 
         onViewMission = {
           navController.navigate(Routes.MISSIONS)
+        },
+
+        onBadges = {
+          navController.navigate(Routes.PROFILE_ACHIEVEMENTS)
         },
 
         onLeaderboard = {

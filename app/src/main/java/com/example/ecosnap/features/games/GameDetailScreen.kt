@@ -105,8 +105,8 @@ fun GameDetailScreen(
 
           GameStatisticCard(
             icon = Lucide.Zap,
-            value = "${game.xpPerCorrect} XP",
-            label = "Per benar",
+            value = "Offline",
+            label = "Latihan saja",
             modifier = Modifier.weight(1f)
           )
 
@@ -200,13 +200,13 @@ fun GameDetailScreen(
 
             Column {
               Text(
-                text = "Hadiah XP",
+                text = "Tanpa Hadiah",
                 style = MaterialTheme.typography.titleMedium,
                 color = EcoColor.Green900
               )
 
               Text(
-                text = "Maksimal ${game.maximumXp} XP dalam mini game ini",
+                text = "Game ini hanya latihan offline: tidak ada XP, EcoPoints, atau peringkat dari server.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = EcoColor.Green700
               )

@@ -5,5 +5,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 data class ProfileMenuItemData(
   val title: String,
   val subtitle: String,
-  val icon: ImageVector
+  val icon: ImageVector,
+  /** Navigation route opened by this row. */
+  val route: String
 )

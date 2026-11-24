@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -19,11 +18,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.composables.icons.lucide.Leaf
-import com.composables.icons.lucide.Lucide
-import com.composables.icons.lucide.Medal
-import com.composables.icons.lucide.Recycle
-import com.composables.icons.lucide.Trophy
 import com.example.ecosnap.core.designsystem.theme.EcoColor
 import com.example.ecosnap.features.profile.model.GreenStats
 
@@ -37,7 +31,7 @@ fun GreenAchievementCard(
     containerColor = EcoColor.Green800
   ) {
     Text(
-      text = "Pencapaian Hijauku",
+      text = stats.title,
       style = MaterialTheme.typography.titleMedium.copy(
         fontSize = 13.sp
       ),
@@ -50,48 +44,27 @@ fun GreenAchievementCard(
       modifier = Modifier.fillMaxWidth(),
       horizontalArrangement = Arrangement.SpaceBetween
     ) {
-      GreenStatItem(
-        value = stats.ecoPoints,
-        label = "EcoPoints",
-        icon = Lucide.Leaf,
-        modifier = Modifier.weight(1f)
-      )
-      GreenStatItem(
-        value = stats.totalDeposits,
-        label = "Setoran",
-        icon = Lucide.Recycle,
-        modifier = Modifier.weight(1f)
-      )
-      GreenStatItem(
-        value = stats.totalBadges,
-        label = "Lencana",
-        icon = Lucide.Medal,
-        modifier = Modifier.weight(1f)
-      )
+      stats.items.forEach { item ->
+        GreenStatItem(
+          value = item.value,
+          label = item.label,
+          icon = item.icon,
+          modifier = Modifier.weight(1f)
+        )
+      }
     }
 
-    Spacer(Modifier.height(14.dp))
+    stats.footer?.let { footer ->
+      Spacer(Modifier.height(14.dp))
 
-    HorizontalDivider(
-      color = EcoColor.Green700
-    )
-
-    Spacer(Modifier.height(10.dp))
-
-    Row(
-      verticalAlignment = Alignment.CenterVertically
-    ) {
-      Icon(
-        imageVector = Lucide.Trophy,
-        contentDescription = null,
-        tint = EcoColor.Green100,
-        modifier = Modifier.size(14.dp)
+      HorizontalDivider(
+        color = EcoColor.Green700
       )
 
-      Spacer(Modifier.width(6.dp))
+      Spacer(Modifier.height(10.dp))
 
       Text(
-        text = "Terus lakukan aksi hijau dan tingkatkan pencapaianmu!",
+        text = footer,
         style = MaterialTheme.typography.bodyMedium.copy(
           fontSize = 11.sp,
           lineHeight = 16.sp
@@ -125,7 +98,7 @@ private fun GreenStatItem(
     Text(
       text = value,
       style = MaterialTheme.typography.titleLarge.copy(
-        fontSize = 26.sp,
+        fontSize = 24.sp,
         lineHeight = 30.sp
       ),
       color = Color.White

@@ -18,7 +18,7 @@ object LocalGames {
       id = "pilah-cepat",
       title = "Pilah Cepat",
       description = "Pilah sampah ke tempat yang benar.",
-      about = "Kenali berbagai benda sehari-hari dan tentukan kategori sampah yang sesuai. Setiap jawaban benar menambah skor XP.",
+      about = "Kenali berbagai benda sehari-hari dan tentukan kategori sampah yang sesuai. Ini latihan offline: tidak ada XP atau poin yang diberikan.",
       type = GameType.SORTING,
       instructions = listOf(
         "Perhatikan objek sampah yang ditampilkan.",
@@ -83,7 +83,7 @@ object LocalGames {
       instructions = listOf(
         "Baca pertanyaan yang ditampilkan.",
         "Pilih satu jawaban yang paling tepat.",
-        "Pelajari penjelasan dan kumpulkan XP."
+        "Pelajari penjelasan setiap soal."
       ),
       questions = listOf(
         GameQuestion(

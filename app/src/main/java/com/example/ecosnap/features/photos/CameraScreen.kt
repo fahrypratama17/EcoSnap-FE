@@ -1,6 +1,7 @@
 package com.example.ecosnap.features.photos
 
 import android.Manifest
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -61,6 +62,7 @@ import com.example.ecosnap.features.photos.components.CameraControlButton
 import com.example.ecosnap.features.photos.components.CameraPreview
 import com.example.ecosnap.features.photos.components.CameraShutterButton
 import com.example.ecosnap.features.photos.components.PhotoFrameOverlay
+import com.example.ecosnap.features.photos.data.RemoteWastePhotosRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -88,9 +90,16 @@ fun CameraScreen(
     }
   }
 
+  val hasCamera = remember(context) {
+    context.packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)
+  }
+
+  val aiAvailable = remember(context) {
+    RemoteWastePhotosRepository(context).isAvailable
+  }
   var hasPermission by remember {
     mutableStateOf(
-      ContextCompat.checkSelfPermission(
+      hasCamera && ContextCompat.checkSelfPermission(
         context,
         Manifest.permission.CAMERA
       ) == PackageManager.PERMISSION_GRANTED
@@ -125,7 +134,7 @@ fun CameraScreen(
     rememberLauncherForActivityResult(
       ActivityResultContracts.RequestPermission()
     ) { granted ->
-      hasPermission = granted
+      hasPermission = granted && hasCamera
 
       if (!granted) {
         errorMessage = "Izin kamera ditolak. Galeri tetap bisa digunakan."
@@ -154,6 +163,8 @@ fun CameraScreen(
             }
 
             onImageReady(localUri)
+          } catch (e: ImportTooLargeException) {
+            errorMessage = "Ukuran gambar terlalu besar. Pilih gambar yang lebih kecil."
           } catch (e: Exception) {
             errorMessage = "Gagal membaca gambar dari galeri."
           } finally {
@@ -164,7 +175,9 @@ fun CameraScreen(
     }
 
   LaunchedEffect(Unit) {
-    if (!hasPermission) {
+    withContext(Dispatchers.IO) { deleteStaleCacheImages(context) }
+
+    if (hasCamera && !hasPermission) {
       permissionLauncher.launch(
         Manifest.permission.CAMERA
       )
@@ -391,19 +404,21 @@ fun CameraScreen(
           Spacer(Modifier.height(10.dp))
 
           Text(
-            text = "Izin kamera diperlukan",
+            text = if (hasCamera) "Izin kamera diperlukan" else "Perangkat ini tidak memiliki kamera. Gunakan galeri.",
             color = Color.White
           )
 
-          Spacer(Modifier.height(8.dp))
+          if (hasCamera) {
+            Spacer(Modifier.height(8.dp))
 
-          TextButton(
-            onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) }
-          ) {
-            Text(
-              text = "Izinkan Kamera",
-              color = EcoColor.Green100
-            )
+            TextButton(
+              onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) }
+            ) {
+              Text(
+                text = "Izinkan Kamera",
+                color = EcoColor.Green100
+              )
+            }
           }
         }
       }
@@ -438,6 +453,16 @@ fun CameraScreen(
       color = EcoColor.Green200
     )
 
+    if (!aiAvailable) {
+      Spacer(Modifier.height(8.dp))
+
+      Text(
+        text = "Analisis AI belum dikonfigurasi pada aplikasi ini, sehingga foto tidak dapat diidentifikasi.",
+        color = Color(0xFFFFE0B2),
+        fontSize = 12.sp
+      )
+    }
+
     if (errorMessage != null) {
       Spacer(Modifier.height(8.dp))
 
@@ -461,11 +486,15 @@ fun CameraScreen(
         icon = Lucide.Images,
         label = "Galeri",
         onClick = {
-          galleryLauncher.launch(
-            PickVisualMediaRequest(
-              ActivityResultContracts.PickVisualMedia.ImageOnly
+          try {
+            galleryLauncher.launch(
+              PickVisualMediaRequest(
+                ActivityResultContracts.PickVisualMedia.ImageOnly
+              )
             )
-          )
+          } catch (e: ActivityNotFoundException) {
+            errorMessage = "Perangkat ini tidak memiliki aplikasi galeri untuk memilih gambar."
+          }
         },
         enabled = !busy
       )
@@ -511,7 +540,16 @@ private fun copyImageToCache(
 
     input.use { source ->
       destination.outputStream().use { output ->
-        source.copyTo(output)
+        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+        var total = 0L
+        while (true) {
+          val read = source.read(buffer)
+          if (read < 0) break
+          total += read
+          if (total > MAX_IMPORT_BYTES) throw ImportTooLargeException()
+          output.write(buffer, 0, read)
+        }
+        if (total == 0L) error("Gambar kosong")
       }
     }
 
@@ -520,4 +558,17 @@ private fun copyImageToCache(
     destination.delete()
     throw e
   }
+}
+
+private const val MAX_IMPORT_BYTES = 64L * 1024 * 1024
+private const val STALE_IMAGE_MILLIS = 60L * 60 * 1000
+
+private class ImportTooLargeException : Exception()
+
+/** Removes this app's own leftover capture/import copies from earlier sessions (never touches other files). */
+private fun deleteStaleCacheImages(context: Context) {
+  val cutoff = System.currentTimeMillis() - STALE_IMAGE_MILLIS
+  context.cacheDir.listFiles { file ->
+    file.isFile && file.name.startsWith("ecosnap_") && file.lastModified() < cutoff
+  }?.forEach { it.delete() }
 }

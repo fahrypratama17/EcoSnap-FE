@@ -10,8 +10,6 @@ object Routes {
   const val LOGIN = "login"
   const val REGISTER = "register"
   const val FORGOT_PASSWORD = "forgot_password"
-  const val CHECK_EMAIL = "check_email"
-  const val NEW_PASSWORD = "new_password"
   const val HELP = "help"
 
   const val MAIN_GRAPH = "main_graph"
@@ -32,13 +30,18 @@ object Routes {
   const val PROFILE_ACCOUNT_SETTINGS = "profile_account_settings"
   const val PROFILE_HELP_CENTER = "profile_help_center"
   const val PROFILE_ACTIVITY_HISTORY = "profile_activity_history"
-  const val PROFILE_REWARDS = "profile_rewards"
   const val PROFILE_ACHIEVEMENTS = "profile_achievements"
   const val PROFILE_ACTIVITY_REPORT = "profile_activity_report"
   const val PROFILE_PRIVACY_SECURITY = "profile_privacy_security"
 
   const val HISTORY = "history"
   const val MISSIONS = "missions"
+  const val PARTNER_DEPOSITS = "partner_deposits"
+  const val PARTNER_DEPOSIT_CREATE = "partner_deposit_create"
+  const val PARTNER_DEPOSIT_DETAIL = "partner_deposit_detail"
+  const val ESTIMATE = "estimate"
+  const val VOUCHERS = "vouchers"
+  const val VOUCHER_DETAIL = "voucher_detail"
   const val PARTNER_DETAIL = "partner_detail"
 
   const val GAMES_ALL = "games_all"
@@ -73,4 +76,9 @@ object Routes {
   fun articleDetail(id: String): String {
     return "$ARTICLE_DETAIL/${Uri.encode(id)}"
   }
+
+  fun partnerDepositDetail(id: String): String = "$PARTNER_DEPOSIT_DETAIL/${Uri.encode(id)}"
+
+  fun voucherDetail(id: String): String = "$VOUCHER_DETAIL/${Uri.encode(id)}"
+
 }

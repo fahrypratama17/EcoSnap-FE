@@ -1,52 +1,57 @@
 package com.example.ecosnap.navigation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import com.example.ecosnap.core.auth.AccountProfile
-import com.example.ecosnap.features.profile.AccountSettingsScreen
-import com.example.ecosnap.features.profile.HelpCenterScreen
-import com.example.ecosnap.features.profile.ProfilePlaceholderScreen
-import com.example.ecosnap.features.profile.ProfileScreen
-import com.example.ecosnap.features.profile.model.ProfileMenuItemData
+import com.example.ecosnap.core.auth.AccountRole
+import com.example.ecosnap.features.gamification.BadgesRoute
+import com.example.ecosnap.features.profile.AccountSecurityRoute
+import com.example.ecosnap.features.profile.AccountSettingsRoute
+import com.example.ecosnap.features.profile.ProfileRoute
+import com.example.ecosnap.features.reports.ActivityReportRoute
+import com.example.ecosnap.features.support.SupportRoute
+import com.example.ecosnap.features.wallet.PointHistoryRoute
+import com.example.ecosnap.features.wallet.VoucherDetailRoute
+import com.example.ecosnap.features.wallet.VoucherListRoute
 
+/**
+ * Account routes for both roles. Point history, vouchers and badges are registered only for users, so
+ * a mitra NavHost cannot reach them. Mitra screens render without the user bottom tabs.
+ */
 fun NavGraphBuilder.profileNavGraph(
   navController: NavHostController,
   account: AccountProfile,
+  onRefreshAccount: () -> Unit,
   onLogout: () -> Unit
 ) {
+  val isUser = account.role == AccountRole.USER
+  val back: () -> Unit = { navController.popBackStack() }
+  val openSettings: () -> Unit = {
+    navController.navigate(Routes.PROFILE_ACCOUNT_SETTINGS) { launchSingleTop = true }
+  }
+  val openProfile: () -> Unit = {
+    if (!navController.popBackStack(Routes.PROFILE, false)) {
+      navController.navigate(Routes.PROFILE) { launchSingleTop = true }
+    }
+  }
 
   composable(Routes.PROFILE) {
-    MainTabScaffold(
-      navController = navController,
-      selectedRoute = Routes.PROFILE
-    ) {
-      ProfileScreen(
+    ProfileScaffold(navController, isUser, Routes.PROFILE) {
+      ProfileRoute(
         account = account,
-        onSettingsClick = {
-          navController.navigate(
-            Routes.PROFILE_ACCOUNT_SETTINGS
-          )
-        },
-        onProfileClick = {
-
-        },
+        onBack = if (isUser) null else back,
+        onSettingsClick = openSettings,
+        onProfileClick = openProfile,
         onEditProfileClick = {
-          navController.navigate(
-            Routes.PROFILE_PRIVACY_SECURITY
-          )
+          navController.navigate(Routes.PROFILE_PRIVACY_SECURITY) { launchSingleTop = true }
         },
-        onActivityMenuClick = { item ->
-          navigateProfileActivityMenu(
-            navController = navController,
-            item = item
-          )
-        },
-        onSupportMenuClick = { item ->
-          navigateProfileSupportMenu(
-            navController = navController,
-            item = item
-          )
+        onMenuClick = { item ->
+          navController.navigate(item.route) { launchSingleTop = true }
         },
         onLogoutClick = onLogout
       )
@@ -54,186 +59,90 @@ fun NavGraphBuilder.profileNavGraph(
   }
 
   composable(Routes.PROFILE_ACCOUNT_SETTINGS) {
-    MainTabScaffold(
-      navController = navController,
-      selectedRoute = Routes.PROFILE
-    ) {
-      AccountSettingsScreen(
-        onBack = {
-          navController.popBackStack()
-        },
-        onSettingsClick = {},
-        onProfileClick = {
-          navController.navigate(Routes.PROFILE) {
-            launchSingleTop = true
-          }
-        }
-      )
-    }
-  }
-
-  composable(Routes.PROFILE_HELP_CENTER) {
-    MainTabScaffold(
-      navController = navController,
-      selectedRoute = Routes.PROFILE
-    ) {
-      HelpCenterScreen(
-        onBack = {
-          navController.popBackStack()
-        },
-        onSettingsClick = {
-          navController.navigate(
-            Routes.PROFILE_ACCOUNT_SETTINGS
-          )
-        },
-        onProfileClick = {
-          navController.navigate(Routes.PROFILE) {
-            launchSingleTop = true
-          }
-        }
-      )
-    }
-  }
-
-  composable(Routes.PROFILE_ACTIVITY_HISTORY) {
-    MainTabScaffold(
-      navController = navController,
-      selectedRoute = Routes.PROFILE
-    ) {
-      ProfilePlaceholderScreen(
-        title = "Riwayat Aktivitas",
-        subtitle = "Lihat aktivitas setoran dan transaksi poin.",
-        onBack = { navController.popBackStack() },
-        onSettingsClick = {
-          navController.navigate(Routes.PROFILE_ACCOUNT_SETTINGS)
-        },
-        onProfileClick = {
-          navController.navigate(Routes.PROFILE) {
-            launchSingleTop = true
-          }
-        }
-      )
-    }
-  }
-
-  composable(Routes.PROFILE_REWARDS) {
-    MainTabScaffold(
-      navController = navController,
-      selectedRoute = Routes.PROFILE
-    ) {
-      ProfilePlaceholderScreen(
-        title = "Reward Saya",
-        subtitle = "Lihat hadiah, voucher, dan reward yang dimiliki.",
-        onBack = { navController.popBackStack() },
-        onSettingsClick = {
-          navController.navigate(Routes.PROFILE_ACCOUNT_SETTINGS)
-        },
-        onProfileClick = {
-          navController.navigate(Routes.PROFILE) {
-            launchSingleTop = true
-          }
-        }
-      )
-    }
-  }
-
-  composable(Routes.PROFILE_ACHIEVEMENTS) {
-    MainTabScaffold(
-      navController = navController,
-      selectedRoute = Routes.PROFILE
-    ) {
-      ProfilePlaceholderScreen(
-        title = "Pencapaian",
-        subtitle = "Lihat badge dan progress aksi hijaumu.",
-        onBack = { navController.popBackStack() },
-        onSettingsClick = {
-          navController.navigate(Routes.PROFILE_ACCOUNT_SETTINGS)
-        },
-        onProfileClick = {
-          navController.navigate(Routes.PROFILE) {
-            launchSingleTop = true
-          }
-        }
-      )
-    }
-  }
-
-  composable(Routes.PROFILE_ACTIVITY_REPORT) {
-    MainTabScaffold(
-      navController = navController,
-      selectedRoute = Routes.PROFILE
-    ) {
-      ProfilePlaceholderScreen(
-        title = "Laporan Aktivitas",
-        subtitle = "Ringkasan aktivitas dan transaksi.",
-        onBack = { navController.popBackStack() },
-        onSettingsClick = {
-          navController.navigate(Routes.PROFILE_ACCOUNT_SETTINGS)
-        },
-        onProfileClick = {
-          navController.navigate(Routes.PROFILE) {
-            launchSingleTop = true
-          }
-        }
+    ProfileScaffold(navController, isUser, Routes.PROFILE) {
+      AccountSettingsRoute(
+        account = account,
+        onBack = back,
+        onSettingsClick = openSettings,
+        onProfileClick = openProfile
       )
     }
   }
 
   composable(Routes.PROFILE_PRIVACY_SECURITY) {
-    MainTabScaffold(
-      navController = navController,
-      selectedRoute = Routes.PROFILE
-    ) {
-      ProfilePlaceholderScreen(
-        title = "Privasi & Keamanan",
-        subtitle = "Kelola akun, keamanan, dan data.",
-        onBack = { navController.popBackStack() },
-        onSettingsClick = {
-          navController.navigate(Routes.PROFILE_ACCOUNT_SETTINGS)
-        },
-        onProfileClick = {
-          navController.navigate(Routes.PROFILE) {
-            launchSingleTop = true
-          }
-        }
+    ProfileScaffold(navController, isUser, Routes.PROFILE) {
+      AccountSecurityRoute(
+        account = account,
+        onBack = back,
+        onSettingsClick = openSettings,
+        onProfileClick = openProfile,
+        onProfileSaved = onRefreshAccount
+      )
+    }
+  }
+
+  composable(Routes.PROFILE_HELP_CENTER) {
+    ProfileScaffold(navController, isUser, Routes.PROFILE) {
+      SupportRoute(accountUid = account.uid, onBack = back)
+    }
+  }
+
+  composable(Routes.PROFILE_ACTIVITY_REPORT) {
+    ProfileScaffold(navController, isUser, Routes.PROFILE) {
+      ActivityReportRoute(accountUid = account.uid, isPartner = !isUser, onBack = back)
+    }
+  }
+
+  if (!isUser) return
+
+  composable(Routes.PROFILE_ACHIEVEMENTS) {
+    ProfileScaffold(navController, true, Routes.PROFILE) {
+      BadgesRoute(accountUid = account.uid, onBack = back)
+    }
+  }
+
+  composable(Routes.PROFILE_ACTIVITY_HISTORY) {
+    ProfileScaffold(navController, true, Routes.POINTS) {
+      PointHistoryRoute(
+        accountUid = account.uid,
+        onBack = back,
+        onDeposit = { id -> navController.navigate(Routes.scanQrResult(id)) },
+        onVoucher = { id -> navController.navigate(Routes.voucherDetail(id)) }
+      )
+    }
+  }
+
+  composable(Routes.VOUCHERS) {
+    ProfileScaffold(navController, true, Routes.POINTS) {
+      VoucherListRoute(
+        accountUid = account.uid,
+        onBack = back,
+        onVoucher = { id -> navController.navigate(Routes.voucherDetail(id)) }
+      )
+    }
+  }
+
+  composable("${Routes.VOUCHER_DETAIL}/{voucherId}") { entry ->
+    ProfileScaffold(navController, true, Routes.POINTS) {
+      VoucherDetailRoute(
+        accountUid = account.uid,
+        voucherId = entry.arguments?.getString("voucherId").orEmpty(),
+        onBack = back
       )
     }
   }
 }
 
-private fun navigateProfileActivityMenu(
+@Composable
+private fun ProfileScaffold(
   navController: NavHostController,
-  item: ProfileMenuItemData
+  isUser: Boolean,
+  selectedRoute: String,
+  content: @Composable () -> Unit
 ) {
-  when (item.title) {
-    "Riwayat Aktivitas" -> {
-      navController.navigate(Routes.PROFILE_ACTIVITY_HISTORY)
-    }
-    "Reward Saya" -> {
-      navController.navigate(Routes.PROFILE_REWARDS)
-    }
-    "Pencapaian" -> {
-      navController.navigate(Routes.PROFILE_ACHIEVEMENTS)
-    }
-    "Laporan Aktivitas" -> {
-      navController.navigate(Routes.PROFILE_ACTIVITY_REPORT)
-    }
-  }
-}
-
-private fun navigateProfileSupportMenu(
-  navController: NavHostController,
-  item: ProfileMenuItemData
-) {
-  when (item.title) {
-    "Pengaturan Akun" -> {
-      navController.navigate(Routes.PROFILE_ACCOUNT_SETTINGS)
-    }
-    "Pusat Bantuan" -> {
-      navController.navigate(Routes.PROFILE_HELP_CENTER)
-    }
-    "Privasi & Keamanan" -> {
-      navController.navigate(Routes.PROFILE_PRIVACY_SECURITY)
-    }
+  if (isUser) {
+    MainTabScaffold(navController = navController, selectedRoute = selectedRoute, content = content)
+  } else {
+    Box(Modifier.fillMaxSize()) { content() }
   }
 }

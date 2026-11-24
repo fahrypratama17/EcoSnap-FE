@@ -23,7 +23,6 @@ import com.example.ecosnap.core.designsystem.theme.EcoColor
 fun GameFeedbackCard(
   isCorrect: Boolean,
   explanation: String,
-  earnedXp: Int,
   modifier: Modifier = Modifier
 ) {
   val background = if (isCorrect) {
@@ -57,7 +56,7 @@ fun GameFeedbackCard(
 
       Text(
         text = if (isCorrect) {
-          "Jawaban Benar! +$earnedXp XP"
+          "Jawaban Benar!"
         } else {
           "Belum Tepat"
         },

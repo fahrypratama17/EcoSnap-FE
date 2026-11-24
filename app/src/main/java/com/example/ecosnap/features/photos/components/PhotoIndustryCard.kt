@@ -22,6 +22,8 @@ import com.example.ecosnap.core.designsystem.theme.EcoColor
 @Composable
 fun ScanIndustryCard(
   description: String,
+  potentialProducts: List<String> = emptyList(),
+  limitations: List<String> = emptyList(),
   modifier: Modifier = Modifier
 ) {
   EcoCard(modifier = modifier.fillMaxWidth()) {
@@ -52,5 +54,31 @@ fun ScanIndustryCard(
       ),
       color = EcoColor.Green700
     )
+
+    if (potentialProducts.isNotEmpty()) {
+      Spacer(Modifier.height(8.dp))
+
+      Text(
+        text = "Produk potensial: " + potentialProducts.joinToString(", "),
+        style = MaterialTheme.typography.bodyMedium.copy(
+          fontSize = 12.sp,
+          lineHeight = 18.sp
+        ),
+        color = EcoColor.Green700
+      )
+    }
+
+    limitations.forEach { limitation ->
+      Spacer(Modifier.height(6.dp))
+
+      Text(
+        text = "Batasan: $limitation",
+        style = MaterialTheme.typography.bodyMedium.copy(
+          fontSize = 12.sp,
+          lineHeight = 18.sp
+        ),
+        color = EcoColor.Green700
+      )
+    }
   }
 }

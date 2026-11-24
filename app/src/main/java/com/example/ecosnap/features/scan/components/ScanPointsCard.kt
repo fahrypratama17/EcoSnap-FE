@@ -29,8 +29,9 @@ private val IndonesianLocale: Locale = Locale.forLanguageTag("id-ID")
 
 @Composable
 fun ScanPointsCard(
-  points: Int,
-  weightKg: Double,
+  label: String,
+  points: Long,
+  weightKg: String,
   modifier: Modifier = Modifier
 ) {
   Surface(
@@ -49,7 +50,7 @@ fun ScanPointsCard(
         verticalArrangement = Arrangement.spacedBy(4.dp)
       ) {
         Text(
-          text = "Poin Diperoleh",
+          text = label,
           style = MaterialTheme.typography.bodyMedium.copy(
             fontSize = 13.sp,
             lineHeight = 16.sp,
@@ -97,7 +98,7 @@ fun ScanPointsCard(
           )
 
           Text(
-            text = String.format(IndonesianLocale, "%.2f Kg", weightKg),
+            text = weightKg,
             style = MaterialTheme.typography.headlineMedium.copy(
               fontSize = 16.sp,
               lineHeight = 20.sp,

@@ -12,6 +12,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -30,6 +31,7 @@ import com.example.ecosnap.features.auth.AuthViewModel
 import com.example.ecosnap.features.auth.AuthViewModelFactory
 import com.example.ecosnap.features.auth.RegisterScreen
 import com.example.ecosnap.features.auth.SessionUnavailableScreen
+import com.example.ecosnap.features.profile.data.syncOnboardingCompletion
 import com.example.ecosnap.features.onboarding.OnboardingScreen
 import com.example.ecosnap.features.onboarding.SplashScreen
 
@@ -98,6 +100,9 @@ fun EcoSnapNavHost(
           session.email, state.busy, state.error, auth::retry, auth::signOut
         )
         is SessionOutcome.Authenticated -> key(session.account.uid, session.account.role) {
+          LaunchedEffect(session.account.uid) {
+            syncOnboardingCompletion(context.applicationContext)
+          }
           if (session.account.role == AccountRole.PARTNER) {
             val controller = rememberNavController()
             NavHost(controller, startDestination = Routes.PARTNER_HOME) {
@@ -106,7 +111,7 @@ fun EcoSnapNavHost(
           } else {
             val controller = rememberNavController()
             NavHost(controller, startDestination = Routes.MAIN_GRAPH) {
-              mainNavGraph(controller, session.account, auth::signOut)
+              mainNavGraph(controller, session.account, auth::retry, auth::signOut)
             }
           }
         }

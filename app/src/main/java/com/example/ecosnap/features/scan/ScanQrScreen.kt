@@ -8,6 +8,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
+import androidx.camera.view.PreviewView
+import androidx.compose.ui.viewinterop.AndroidView
+import android.content.ActivityNotFoundException
+import java.util.concurrent.Executors
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -23,7 +27,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,7 +41,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.BiasAlignment
@@ -52,6 +58,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.composables.icons.lucide.Camera
 import com.composables.icons.lucide.Images
+import com.composables.icons.lucide.Keyboard
 import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.SwitchCamera
 import com.composables.icons.lucide.X
@@ -59,12 +66,7 @@ import com.composables.icons.lucide.Zap
 import com.composables.icons.lucide.ZapOff
 import com.example.ecosnap.R
 import com.example.ecosnap.core.designsystem.theme.EcoColor
-import com.example.ecosnap.features.photos.components.CameraPreview
 import com.example.ecosnap.features.scan.components.ScanQrControlButton
-import com.example.ecosnap.features.scan.components.ScanQrShutterButton
-import com.example.ecosnap.features.scan.data.LocalDeposits
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 private val ScanBackground = Color(0xFF17261F)
 private val PreviewPlaceholder = Color(0xFFECEDE3)
@@ -77,19 +79,27 @@ private val FrameGuideAlignment = BiasAlignment(0f, -0.35f)
 
 @Composable
 fun ScanQrScreen(
+  state: ScanUiState,
   onBack: () -> Unit,
-  onQrScanned: (String) -> Unit,
+  onDecoded: (String) -> Unit,
+  onManualToken: (String) -> Unit,
+  onImagePicked: (android.content.ContentResolver, android.net.Uri) -> Unit,
+  onGalleryUnavailable: () -> Unit,
   modifier: Modifier = Modifier
 ) {
   val context = LocalContext.current
   val lifecycleOwner = LocalLifecycleOwner.current
-  val scope = rememberCoroutineScope()
+  val isDecoding = state.phase == ScanPhase.DecodingImage
+  val currentDecoding by rememberUpdatedState(isDecoding)
+  val currentOnDecoded by rememberUpdatedState(onDecoded)
+  val analyzerExecutor = remember { Executors.newSingleThreadExecutor() }
+  DisposableEffect(analyzerExecutor) { onDispose { analyzerExecutor.shutdown() } }
+  var showManual by remember { mutableStateOf(false) }
 
   val cameraController = remember(context) {
     LifecycleCameraController(
       context.applicationContext
     ).apply {
-      // Nanti analyzer pembaca QR dipasang di use case ini.
       setEnabledUseCases(CameraController.IMAGE_ANALYSIS)
       cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
     }
@@ -107,23 +117,7 @@ fun ScanQrScreen(
   var cameraReady by remember { mutableStateOf(false) }
   var usingFrontCamera by remember { mutableStateOf(false) }
   var torchEnabled by remember { mutableStateOf(false) }
-  var isVerifying by remember { mutableStateOf(false) }
   var errorMessage by remember { mutableStateOf<String?>(null) }
-
-  fun verifyQr() {
-    if (isVerifying) return
-
-    scope.launch {
-      isVerifying = true
-      errorMessage = null
-
-      // Belum ada decoder QR: hasil scan disimulasikan dengan payload dummy.
-      delay(800)
-      onQrScanned(LocalDeposits.demoQrPayload)
-
-      isVerifying = false
-    }
-  }
 
   val permissionLauncher =
     rememberLauncherForActivityResult(
@@ -142,7 +136,7 @@ fun ScanQrScreen(
       ActivityResultContracts.PickVisualMedia()
     ) { selectedUri ->
       if (selectedUri != null) {
-        verifyQr()
+        onImagePicked(context.applicationContext.contentResolver, selectedUri)
       }
     }
 
@@ -159,6 +153,10 @@ fun ScanQrScreen(
   ) {
     if (hasPermission) {
       try {
+        cameraController.setImageAnalysisAnalyzer(
+          analyzerExecutor,
+          QrFrameAnalyzer(enabled = { !currentDecoding }, onResult = { currentOnDecoded(it) })
+        )
         cameraController.bindToLifecycle(lifecycleOwner)
         cameraReady = true
       } catch (e: Exception) {
@@ -169,6 +167,7 @@ fun ScanQrScreen(
 
     onDispose {
       cameraReady = false
+      cameraController.clearImageAnalysisAnalyzer()
       cameraController.enableTorch(false)
       cameraController.unbind()
     }
@@ -279,7 +278,7 @@ fun ScanQrScreen(
       contentAlignment = Alignment.Center
     ) {
       if (hasPermission) {
-        CameraPreview(
+        QrCameraPreview(
           controller = cameraController,
           modifier = Modifier.fillMaxSize()
         )
@@ -337,18 +336,18 @@ fun ScanQrScreen(
         contentAlignment = Alignment.Center
       ) {
         Text(
-          text = errorMessage ?: "Posisikan QR di dalam kotak",
+          text = errorMessage ?: state.message ?: "Posisikan QR di dalam kotak",
           style = MaterialTheme.typography.bodyMedium.copy(
             fontSize = 12.sp,
             lineHeight = 15.sp,
             letterSpacing = 0.sp
           ),
-          color = if (errorMessage != null) ErrorTextColor else Color.White,
+          color = if (errorMessage != null || state.message != null) ErrorTextColor else Color.White,
           textAlign = TextAlign.Center
         )
       }
 
-      if (isVerifying) {
+      if (isDecoding) {
         Box(
           modifier = Modifier
             .fillMaxSize()
@@ -362,7 +361,7 @@ fun ScanQrScreen(
             CircularProgressIndicator(color = Color.White)
 
             Text(
-              text = "Memverifikasi QR...",
+              text = "Membaca gambar...",
               style = MaterialTheme.typography.bodyMedium.copy(
                 fontSize = 12.sp,
                 lineHeight = 15.sp,
@@ -387,20 +386,28 @@ fun ScanQrScreen(
         icon = Lucide.Images,
         label = "Galeri",
         onClick = {
-          galleryLauncher.launch(
-            PickVisualMediaRequest(
-              ActivityResultContracts.PickVisualMedia.ImageOnly
+          try {
+            galleryLauncher.launch(
+              PickVisualMediaRequest(
+                ActivityResultContracts.PickVisualMedia.ImageOnly
+              )
             )
-          )
+          } catch (e: ActivityNotFoundException) {
+            onGalleryUnavailable()
+          }
         },
         shape = RoundedCornerShape(14.dp),
         borderColor = GalleryBorderColor,
-        enabled = !isVerifying
+        enabled = !isDecoding
       )
 
-      ScanQrShutterButton(
-        onClick = { verifyQr() },
-        enabled = cameraUsable && !isVerifying
+      ScanQrControlButton(
+        icon = Lucide.Keyboard,
+        label = "Kode",
+        onClick = { showManual = true },
+        shape = CircleShape,
+        containerColor = Color.White.copy(alpha = 0.07f),
+        enabled = !isDecoding
       )
 
       ScanQrControlButton(
@@ -409,9 +416,19 @@ fun ScanQrScreen(
         onClick = { switchCamera() },
         shape = CircleShape,
         containerColor = Color.White.copy(alpha = 0.07f),
-        enabled = cameraUsable && !isVerifying
+        enabled = cameraUsable && !isDecoding
       )
     }
+  }
+
+  if (showManual) {
+    ManualTokenDialog(
+      onDismiss = { showManual = false },
+      onSubmit = {
+        showManual = false
+        onManualToken(it)
+      }
+    )
   }
 }
 
@@ -439,4 +456,46 @@ private fun ScanHeaderButton(
       modifier = Modifier.size(21.dp)
     )
   }
+}
+
+@Composable
+private fun ManualTokenDialog(
+  onDismiss: () -> Unit,
+  onSubmit: (String) -> Unit
+) {
+  var text by remember { mutableStateOf("") }
+  AlertDialog(
+    onDismissRequest = onDismiss,
+    title = { Text("Masukkan kode QR") },
+    text = {
+      OutlinedTextField(
+        value = text,
+        onValueChange = { text = it.take(128) },
+        singleLine = true,
+        label = { Text("Kode dari mitra") }
+      )
+    },
+    confirmButton = {
+      TextButton(onClick = { onSubmit(text) }, enabled = text.isNotBlank()) { Text("Periksa") }
+    },
+    dismissButton = { TextButton(onClick = onDismiss) { Text("Batal") } }
+  )
+}
+
+@Composable
+private fun QrCameraPreview(
+  controller: LifecycleCameraController,
+  modifier: Modifier = Modifier
+) {
+  AndroidView(
+    modifier = modifier,
+    factory = { context ->
+      PreviewView(context).apply {
+        implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+        scaleType = PreviewView.ScaleType.FILL_CENTER
+        this.controller = controller
+      }
+    },
+    update = { it.controller = controller }
+  )
 }

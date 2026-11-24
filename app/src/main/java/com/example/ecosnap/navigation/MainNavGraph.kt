@@ -1,19 +1,12 @@
 package com.example.ecosnap.navigation
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
@@ -27,13 +20,16 @@ import com.composables.icons.lucide.ScanLine
 import com.example.ecosnap.core.auth.AccountProfile
 import com.example.ecosnap.core.designsystem.components.EcoBottomItem
 import com.example.ecosnap.core.designsystem.components.EcoBottomNavigation
-import com.example.ecosnap.core.designsystem.components.EcoButton
 import com.example.ecosnap.features.articles.ArticleDetailRoute
 import com.example.ecosnap.features.articles.ArticleListRoute
+import com.example.ecosnap.features.deposits.EstimateRoute
 import com.example.ecosnap.features.home.HomeRoute
 import com.example.ecosnap.features.home.MissionsRoute
 import com.example.ecosnap.features.map.PartnerDetailRoute
 import com.example.ecosnap.features.map.PartnerMapRoute
+import com.example.ecosnap.features.notifications.NotificationsRoute
+import com.example.ecosnap.features.wallet.PointHistoryRoute
+import com.example.ecosnap.features.wallet.PointsRoute
 
 private val bottomItems = listOf(
   EcoBottomItem(
@@ -66,6 +62,7 @@ private val bottomItems = listOf(
 fun NavGraphBuilder.mainNavGraph(
   navController: NavHostController,
   account: AccountProfile,
+  onRefreshAccount: () -> Unit,
   onLogout: () -> Unit
 ) {
   navigation(
@@ -147,59 +144,54 @@ fun NavGraphBuilder.mainNavGraph(
     }
 
     composable(Routes.POINTS) {
-      MainTabScaffold(
-        navController = navController,
-        selectedRoute = Routes.POINTS
-      ) {
-        Column(
-          modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-          horizontalAlignment = Alignment.CenterHorizontally,
-          verticalArrangement = Arrangement.Center
-        ) {
-          Text(
-            text = "Poin & Reward",
-            style = MaterialTheme.typography.titleLarge
-          )
-
-          Spacer(Modifier.height(16.dp))
-
-          EcoButton(
-            text = "Lihat Leaderboard Setoran",
-            onClick = {
-              navController.navigate(
-                Routes.DEPOSIT_LEADERBOARD
-              )
-            }
-          )
-        }
-      }
-    }
-
-    gamesNavGraph(navController)
-
-    leaderboardNavGraph(navController)
-
-    photoNavGraph(navController)
-
-    scanNavGraph(navController)
-
-    profileNavGraph(navController, account, onLogout)
-
-    listOf(
-      Routes.NOTIFICATION to "Notifikasi",
-      Routes.HISTORY to "Riwayat Setoran",
-    ).forEach { (route, title) ->
-      composable(route) {
-        MainPlaceholder(
-          title = title,
-          onBack = {
-            navController.popBackStack()
-          }
+      MainTabScaffold(navController, Routes.POINTS) {
+        PointsRoute(
+          accountUid = account.uid,
+          onVoucher = { navController.navigate(Routes.voucherDetail(it)) },
+          onHistory = { navController.navigate(Routes.HISTORY) },
+          onVouchers = { navController.navigate(Routes.VOUCHERS) },
+          onEstimate = { navController.navigate(Routes.ESTIMATE) },
+          onLeaderboard = { navController.navigate(Routes.DEPOSIT_LEADERBOARD) }
         )
       }
     }
+
+    composable(Routes.HISTORY) {
+      MainTabScaffold(navController, Routes.HOME) {
+        PointHistoryRoute(
+          accountUid = account.uid,
+          onBack = { navController.popBackStack() },
+          onDeposit = { navController.navigate(Routes.scanQrResult(it)) },
+          onVoucher = { navController.navigate(Routes.voucherDetail(it)) }
+        )
+      }
+    }
+
+
+    composable(Routes.ESTIMATE) {
+      MainTabScaffold(navController, Routes.POINTS) {
+        EstimateRoute(accountUid = account.uid, onBack = { navController.popBackStack() })
+      }
+    }
+
+    composable(Routes.NOTIFICATION) {
+      MainTabScaffold(navController, Routes.HOME) {
+        NotificationsRoute(
+          accountUid = account.uid,
+          isPartner = false,
+          onBack = { navController.popBackStack() },
+          onDeposit = { navController.navigate(Routes.scanQrResult(it)) },
+          onVoucher = { navController.navigate(Routes.voucherDetail(it)) },
+          onMissions = { navController.navigate(Routes.MISSIONS) }
+        )
+      }
+    }
+
+    gamesNavGraph(navController, account.uid)
+    leaderboardNavGraph(navController, account.uid)
+    photoNavGraph(navController)
+    scanNavGraph(navController, account.uid)
+    profileNavGraph(navController, account, onRefreshAccount, onLogout)
   }
 }
 
@@ -235,33 +227,5 @@ internal fun MainTabScaffold(
       ) {
         content()
       }
-  }
-}
-
-@Composable
-private fun MainPlaceholder(
-  title: String,
-  onBack: (() -> Unit)? = null
-) {
-  Column(
-    modifier = Modifier
-      .fillMaxSize()
-      .padding(24.dp),
-    horizontalAlignment = Alignment.CenterHorizontally,
-    verticalArrangement = Arrangement.Center
-  ) {
-    Text(
-      text = title,
-      style = MaterialTheme.typography.titleLarge
-    )
-
-    if (onBack != null){
-      Spacer(Modifier.height(16.dp))
-
-      EcoButton(
-        text = "Kembali",
-        onClick = onBack
-      )
-    }
   }
 }

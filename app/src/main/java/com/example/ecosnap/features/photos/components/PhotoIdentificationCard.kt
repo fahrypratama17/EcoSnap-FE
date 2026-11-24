@@ -19,6 +19,7 @@ import coil3.compose.AsyncImage
 import com.example.ecosnap.core.designsystem.components.EcoCard
 import com.example.ecosnap.core.designsystem.theme.EcoColor
 import com.example.ecosnap.features.photos.model.WastePhotosResult
+import com.example.ecosnap.features.photos.model.RecyclingStatus
 
 @Composable
 fun PhotoIdentificationCard(
@@ -55,9 +56,17 @@ fun PhotoIdentificationCard(
     ),
       horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-      result.tags.forEach { tag ->
-        PhotoMaterialChip(label = tag)
+      val statusLabel = when (result.recyclingStatus) {
+        RecyclingStatus.Recyclable -> "Dapat didaur ulang"
+        RecyclingStatus.ConditionallyRecyclable -> "Daur ulang bersyarat"
+        RecyclingStatus.NonRecyclable -> "Tidak dapat didaur ulang"
+        RecyclingStatus.Unknown -> "Status daur ulang belum diketahui"
       }
+      (listOfNotNull(result.category, result.material, statusLabel) + result.tags)
+        .distinct()
+        .forEach { label ->
+          PhotoMaterialChip(label = label)
+        }
     }
 
     Spacer(Modifier.height(10.dp))

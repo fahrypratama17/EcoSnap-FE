@@ -85,7 +85,7 @@ fun MiniGameCard(
           horizontalArrangement = Arrangement.SpaceBetween
         ) {
           Text(
-            text = "XP",
+            text = "Latihan offline",
             fontSize = 11.sp,
             color = EcoColor.Green700
           )

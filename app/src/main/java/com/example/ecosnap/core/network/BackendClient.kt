@@ -64,16 +64,18 @@ class BackendClient(client: OkHttpClient, baseUrl: String, private val firebaseA
         query: Map<String, String> = emptyMap(),
         body: JsonObject? = null,
         expectedStatuses: Set<Int> = setOf(200),
+        idempotencyKey: String? = null,
     ): JsonObject? {
+        require(idempotencyKey == null || IDEMPOTENCY_KEY.matches(idempotencyKey)) { "Invalid idempotency key" }
         val url = buildUrl(path, query)
         val payload = buildBody(method, body)
         val user = firebaseAuth.currentUser ?: throw unauthenticated()
         val uid = user.uid
 
-        var raw = exchange(user, uid, method, url, payload, forceRefresh = false)
+        var raw = exchange(user, uid, method, url, payload, forceRefresh = false, idempotencyKey = idempotencyKey)
         if (raw.status == 401) {
             ensureCurrent(uid)
-            raw = exchange(user, uid, method, url, payload, forceRefresh = true)
+            raw = exchange(user, uid, method, url, payload, forceRefresh = true, idempotencyKey = idempotencyKey)
         }
         ensureCurrent(uid)
 
@@ -89,6 +91,29 @@ class BackendClient(client: OkHttpClient, baseUrl: String, private val firebaseA
         throw failure(raw, uid)
     }
 
+    /**
+     * Authenticated GET of a PDF (at most [MAX_PDF_BYTES]). The 200 body is returned as raw bytes and never
+     * parsed as JSON; any non-200 answer is decoded as the usual JSON error envelope.
+     */
+    suspend fun downloadPdf(path: String, query: Map<String, String> = emptyMap()): ByteArray {
+        val url = buildUrl(path, query)
+        val user = firebaseAuth.currentUser ?: throw unauthenticated()
+        val uid = user.uid
+
+        var raw = exchange(user, uid, "GET", url, null, forceRefresh = false, pdf = true)
+        if (raw.status == 401) {
+            ensureCurrent(uid)
+            raw = exchange(user, uid, "GET", url, null, forceRefresh = true, pdf = true)
+        }
+        ensureCurrent(uid)
+
+        if (raw.status == 200) {
+            if (raw.tooLarge) throw BackendException(200, "response_too_large", "Dokumen terlalu besar.", raw.requestId)
+            return raw.bytes?.takeIf { it.isNotEmpty() } ?: throw invalidResponse(raw.requestId)
+        }
+        throw failure(raw, uid)
+    }
+
     private suspend fun exchange(
         user: FirebaseUser,
         uid: String,
@@ -96,17 +121,20 @@ class BackendClient(client: OkHttpClient, baseUrl: String, private val firebaseA
         url: HttpUrl,
         payload: RequestBody?,
         forceRefresh: Boolean,
+        idempotencyKey: String? = null,
+        pdf: Boolean = false,
     ): Raw {
         val token = token(user, uid, forceRefresh)
         val request = Request.Builder()
             .url(url)
             .method(method, payload)
             .header("Authorization", "Bearer $token")
-            .header("Accept", "application/json")
+            .header("Accept", if (pdf) "application/pdf, application/json" else "application/json")
+            .apply { if (idempotencyKey != null) header("Idempotency-Key", idempotencyKey) }
             .cacheControl(CacheControl.Builder().noStore().build())
             .build()
         return try {
-            execute(request)
+            execute(request, pdf)
         } catch (e: InterruptedIOException) {
             throw BackendException(null, "timeout", NETWORK_MESSAGE)
         } catch (e: IOException) {
@@ -130,7 +158,7 @@ class BackendClient(client: OkHttpClient, baseUrl: String, private val firebaseA
     }
 
     /** The body is read inside the callback so the call stays cancellable and the socket always closes. */
-    private suspend fun execute(request: Request): Raw = suspendCancellableCoroutine { cont ->
+    private suspend fun execute(request: Request, pdf: Boolean): Raw = suspendCancellableCoroutine { cont ->
         val call = http.newCall(request)
         cont.invokeOnCancellation { call.cancel() }
         call.enqueue(object : Callback {
@@ -140,7 +168,7 @@ class BackendClient(client: OkHttpClient, baseUrl: String, private val firebaseA
 
             override fun onResponse(call: Call, response: Response) {
                 val raw = try {
-                    response.use { read(it) }
+                    response.use { read(it, pdf) }
                 } catch (e: IOException) {
                     cont.resumeWithException(e)
                     return
@@ -153,10 +181,22 @@ class BackendClient(client: OkHttpClient, baseUrl: String, private val firebaseA
         })
     }
 
-    private fun read(response: Response): Raw {
+    private fun read(response: Response, pdf: Boolean): Raw {
         val requestId = response.header("X-Request-Id")?.safeId()
         val body = response.body
         if (response.code == 204 || response.code == 205) return Raw(response.code, null, false, requestId)
+        if (pdf && response.code == 200) {
+            // Binary success is never decoded as text/JSON; anything other than a bounded PDF is invalid.
+            val type = body.contentType()
+            if (type == null || !type.type.equals("application", true) || !type.subtype.equals("pdf", true)) {
+                return Raw(response.code, null, false, requestId)
+            }
+            if (body.contentLength() > MAX_PDF_BYTES) return Raw(response.code, null, true, requestId)
+            val source = body.source()
+            source.request(MAX_PDF_BYTES + 1)
+            if (source.buffer.size > MAX_PDF_BYTES) return Raw(response.code, null, true, requestId)
+            return Raw(response.code, null, false, requestId, source.buffer.readByteArray())
+        }
         if (body.contentLength() > MAX_BODY_BYTES) return Raw(response.code, null, true, requestId)
         val source = body.source()
         source.request(MAX_BODY_BYTES + 1)
@@ -164,7 +204,13 @@ class BackendClient(client: OkHttpClient, baseUrl: String, private val firebaseA
         return Raw(response.code, source.buffer.readUtf8(), false, requestId)
     }
 
-    private class Raw(val status: Int, val body: String?, val tooLarge: Boolean, val requestId: String?)
+    private class Raw(
+        val status: Int,
+        val body: String?,
+        val tooLarge: Boolean,
+        val requestId: String?,
+        val bytes: ByteArray? = null,
+    )
 
     private fun failure(raw: Raw, uid: String): BackendException {
         val root = if (raw.tooLarge) null else runCatching { JsonParser.parseString(raw.body).asJsonObject }.getOrNull()
@@ -230,6 +276,8 @@ class BackendClient(client: OkHttpClient, baseUrl: String, private val firebaseA
         private val JSON = "application/json; charset=utf-8".toMediaType()
         private val METHODS = setOf("GET", "POST", "PUT", "PATCH", "DELETE")
         private const val MAX_BODY_BYTES = 1L * 1024 * 1024
+        private const val MAX_PDF_BYTES = 5L * 1024 * 1024
+        private val IDEMPOTENCY_KEY = Regex("[A-Za-z0-9_-]{8,128}")
         private const val NETWORK_MESSAGE = "Tidak dapat terhubung. Periksa koneksi internet Anda."
 
         val default: BackendClient by lazy {

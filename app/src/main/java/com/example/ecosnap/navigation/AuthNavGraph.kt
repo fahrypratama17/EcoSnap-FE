@@ -19,8 +19,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.example.ecosnap.features.auth.ForgotPasswordScreen
-import com.example.ecosnap.features.auth.CheckEmailScreen
-import com.example.ecosnap.features.auth.NewPasswordScreen
 import com.example.ecosnap.features.auth.LoginScreen
 import com.example.ecosnap.features.auth.RegisterScreen
 import com.example.ecosnap.features.auth.AuthViewModel
@@ -84,22 +82,6 @@ fun NavGraphBuilder.authNavGraph(
 
     composable(Routes.FORGOT_PASSWORD) {
       ForgotPasswordScreen(
-        onBack = { navController.popBackStack() },
-        onHelp = { navController.navigate(Routes.HELP) },
-        onContinue = { navController.navigate(Routes.CHECK_EMAIL) }
-      )
-    }
-
-    composable(Routes.CHECK_EMAIL) {
-      CheckEmailScreen(
-        onBack = { navController.popBackStack() },
-        onHelp = { navController.navigate(Routes.HELP) },
-        onContinue = { navController.navigate(Routes.NEW_PASSWORD) }
-      )
-    }
-
-    composable(Routes.NEW_PASSWORD) {
-      NewPasswordScreen(
         onBack = { navController.popBackStack() },
         onHelp = { navController.navigate(Routes.HELP) }
       )

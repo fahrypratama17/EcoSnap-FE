@@ -21,6 +21,8 @@ okhttp = "5.5.1"
 firebaseBom = "34.12.0"
 googleServices = "4.6.0"
 kotlinxCoroutines = "1.10.2"
+desugarJdkLibs = "2.1.5"
+zxing = "3.5.3"
 
 [libraries]
 # OpenGL ES supports minSdk 24 devices/emulators without requiring Vulkan hardware.
@@ -55,6 +57,8 @@ okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
 kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "kotlinxCoroutines" }
+desugar-jdk-libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugarJdkLibs" }
+zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

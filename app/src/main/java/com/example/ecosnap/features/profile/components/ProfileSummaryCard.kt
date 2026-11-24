@@ -75,6 +75,19 @@ fun ProfileSummaryCard(
           ),
           color = EcoColor.Green100
         )
+
+        userProfile.detail?.let { detail ->
+          Spacer(Modifier.height(2.dp))
+
+          Text(
+            text = detail,
+            style = MaterialTheme.typography.bodyMedium.copy(
+              fontSize = 11.sp,
+              lineHeight = 16.sp
+            ),
+            color = EcoColor.Green100
+          )
+        }
       }
     }
 

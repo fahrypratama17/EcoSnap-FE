@@ -145,29 +145,11 @@ fun GameResultScreen(
 
           Spacer(Modifier.height(16.dp))
 
-          Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-              imageVector = Lucide.Zap,
-              contentDescription = null,
-              tint = EcoColor.Green100
-            )
-
-            Spacer(Modifier.width(8.dp))
-
-            Text(
-              text = "XP Diperoleh",
-              style = MaterialTheme.typography.bodyMedium,
-              color = EcoColor.Green100
-            )
-
-            Spacer(Modifier.weight(1f))
-
-            Text(
-              text = "+${result.earnedXp} XP",
-              style = MaterialTheme.typography.titleMedium,
-              color = Color.White
-            )
-          }
+          Text(
+            text = "Latihan offline: tidak ada XP, EcoPoints, atau peringkat yang diberikan.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = EcoColor.Green100
+          )
         }
       }
 
