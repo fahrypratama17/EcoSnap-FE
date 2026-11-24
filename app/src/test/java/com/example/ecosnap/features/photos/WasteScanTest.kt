@@ -90,7 +90,7 @@ class WasteScanTest {
   @Test fun uploadUsesActualImageAndScanIdWithoutGroqCredentials() = runBlocking {
     val app = RuntimeEnvironment.getApplication()
     val file = File(app.cacheDir, "scan-upload-test.png")
-    val original = byteArrayOf(0x89.toByte(), 0x50, 0x4e, 0x47, 1, 2, 3)
+    val original = byteArrayOf(0x89.toByte(), 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3)
     file.writeBytes(original)
     var uploads = 0
     val client = OkHttpClient.Builder().addInterceptor { chain ->
@@ -103,6 +103,7 @@ class WasteScanTest {
       request.body!!.writeTo(buffer)
       val body = buffer.readByteArray()
       assertTrue(body.toList().windowed(original.size).any { it == original.toList() })
+      assertTrue(String(body, Charsets.ISO_8859_1).contains("Content-Type: image/png"))
       Response.Builder().request(request).protocol(Protocol.HTTP_1_1).code(200).message("OK")
         .body(fixture().toResponseBody("application/json".toMediaType())).build()
     }.build()
@@ -110,6 +111,42 @@ class WasteScanTest {
     val response = repository.analyze(Uri.fromFile(file), "test-scan-id")
     assertEquals("Botol Plastik Minuman", ScanResponseParser.parse(response).objectName)
     assertEquals(1, uploads)
+    file.delete()
+    Unit
+  }
+
+  @Test fun uploadSendsMimeTypeDetectedFromImageBytes() = runBlocking {
+    val app = RuntimeEnvironment.getApplication()
+    val file = File(app.cacheDir, "scan-mime-test")
+    var expectedType = ""
+    var requests = 0
+    val client = OkHttpClient.Builder().addInterceptor { chain ->
+      requests++
+      val buffer = Buffer()
+      chain.request().body!!.writeTo(buffer)
+      assertTrue(buffer.readByteString().string(Charsets.ISO_8859_1).contains("Content-Type: $expectedType"))
+      Response.Builder().request(chain.request()).protocol(Protocol.HTTP_1_1).code(200).message("OK")
+        .body(fixture().toResponseBody("application/json".toMediaType())).build()
+    }.build()
+    val repository = HttpWastePhotosRepository(app, "http://localhost:8000", client)
+    val samples = listOf(
+      "image/jpeg" to byteArrayOf(0xff.toByte(), 0xd8.toByte(), 0xff.toByte(), 1),
+      "image/png" to byteArrayOf(0x89.toByte(), 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a),
+      "image/webp" to byteArrayOf(0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50)
+    )
+    for ((type, bytes) in samples) {
+      file.writeBytes(bytes)
+      expectedType = type
+      repository.analyze(Uri.fromFile(file), "test-scan-id")
+    }
+    file.writeText("not an image")
+    try {
+      repository.analyze(Uri.fromFile(file), "test-scan-id")
+      fail("Unsupported images must be rejected")
+    } catch (e: ScanException) {
+      assertTrue(e.userMessage.contains("JPEG"))
+    }
+    assertEquals(3, requests)
     file.delete()
     Unit
   }

@@ -57,8 +57,17 @@ class HttpWastePhotosRepository(
     } catch (_: IOException) {
       throw ScanException("Foto tidak dapat dibaca. Pilih atau ambil foto kembali.")
     }
+    val imageType = when {
+      bytes.size >= 3 && bytes[0] == 0xff.toByte() && bytes[1] == 0xd8.toByte() && bytes[2] == 0xff.toByte() -> "image/jpeg"
+      bytes.size >= 8 && bytes.copyOfRange(0, 8).contentEquals(
+        byteArrayOf(0x89.toByte(), 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a)
+      ) -> "image/png"
+      bytes.size >= 12 && bytes.copyOfRange(0, 4).contentEquals(byteArrayOf(0x52, 0x49, 0x46, 0x46)) &&
+        bytes.copyOfRange(8, 12).contentEquals(byteArrayOf(0x57, 0x45, 0x42, 0x50)) -> "image/webp"
+      else -> throw ScanException("Gunakan foto JPEG, PNG, atau WebP yang tidak rusak.")
+    }
     val body = MultipartBody.Builder().setType(MultipartBody.FORM)
-      .addFormDataPart("image", "scan-image", bytes.toRequestBody("application/octet-stream".toMediaType()))
+      .addFormDataPart("image", "scan-image", bytes.toRequestBody(imageType.toMediaType()))
       .build()
     val request = Request.Builder().url(baseUrl.trimEnd('/') + "/api/scan")
       .header("X-Scan-Id", scanId).post(body).build()
