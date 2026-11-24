@@ -34,11 +34,12 @@ import com.example.ecosnap.features.auth.model.AuthRole
 fun AuthRoleSelector(
   selectedRole: AuthRole,
   onRoleSelected: (AuthRole) -> Unit,
-  modifier: Modifier = Modifier
+  modifier: Modifier = Modifier,
+  label: String = "Daftar sebagai"
 ) {
   Column(modifier = modifier) {
     Text(
-      text = "Daftar sebagai",
+      text = label,
       style = MaterialTheme.typography.labelLarge,
       color = EcoColor.Green900
     )
@@ -129,7 +130,7 @@ private fun AuthRoleCard(
       }
 
       Box(
-        modifier = modifier
+        modifier = Modifier
           .size(16.dp)
           .border(
             1.dp,
