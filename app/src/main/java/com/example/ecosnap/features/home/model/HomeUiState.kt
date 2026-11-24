@@ -8,8 +8,8 @@ data class NearbyPartnerUi(
 
 data class HomeUiState(
   val userName: String = "Pengguna",
-  val points: Int = 0,
-  val monthlyDeposits: Int = 0,
+  val points: Long = 0,
+  val monthlyDeposits: Int? = null,
 
   val missionTitle: String = "Pahlawan Daur Ulang",
   val missionDescription: String = "Setorkan sampah sebanyak 3 kali",

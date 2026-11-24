@@ -11,16 +11,6 @@ import com.composables.icons.lucide.Trophy
 
 object ProfileDummyData {
 
-  val userProfile = UserProfile(
-    name = "Fahry",
-    email = "m.fahry.pratama.putra@gmail.com"
-  )
-
-  val greenStats = GreenStats(
-    ecoPoints = "1.250",
-    totalDeposits = "3",
-    totalBadges = "4"
-  )
 
   val activityMenus = listOf(
     ProfileMenuItemData(

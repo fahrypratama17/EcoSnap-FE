@@ -11,6 +11,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,17 +39,24 @@ fun LoginScreen(
   onRegisterClick: () -> Unit,
   onForgotPassword: () -> Unit,
   onHelp: () -> Unit,
-  onLogin: (String, String) -> Unit
+  onLogin: (String, String) -> Unit,
+  busy: Boolean = false,
+  error: String? = null,
+  onInputChanged: () -> Unit = {}
 ) {
-  var email by remember { mutableStateOf("") }
+  var email by rememberSaveable { mutableStateOf("") }
 
   var password by remember { mutableStateOf("") }
 
   var submitted by rememberSaveable { mutableStateOf(false) }
 
+  DisposableEffect(Unit) {
+    onDispose { password = "" }
+  }
+
   AuthLayout(
-    onBack = onBack,
-    onHelp = onHelp
+    onBack = { if (!busy) onBack() },
+    onHelp = { if (!busy) onHelp() }
   ) {
     Text(
       text = "Masuk ke akun Anda",
@@ -66,9 +74,11 @@ fun LoginScreen(
 
     Spacer(Modifier.height(28.dp))
 
+    AuthOperationStatus(busy = busy, error = error)
+
     EcoTextField(
       value = email,
-      onValueChange = { email = it },
+      onValueChange = { if (!busy) { email = it; onInputChanged() } },
       label = "Email",
       placeholder =   "nama@gmail.com",
       keyboardType = KeyboardType.Email,
@@ -86,13 +96,14 @@ fun LoginScreen(
 
     EcoPasswordField(
       value = password,
-      onValueChange = { password = it },
+      onValueChange = { if (!busy) { password = it; onInputChanged() } },
       label = "Kata sandi",
       errorMessage = if (submitted && password.isBlank()) "Kata sandi wajib diisi" else null
     )
 
     TextButton(
       onClick = onForgotPassword,
+      enabled = !busy,
       modifier = Modifier.align(Alignment.End)
     ) {
       Text(
@@ -105,11 +116,12 @@ fun LoginScreen(
     Spacer(Modifier.height(24.dp))
 
     EcoButton(
-      text = "Masuk",
+      text = if (busy) "Sedang masuk…" else "Masuk",
+      enabled = !busy,
       onClick = {
         submitted = true
 
-        if (isValidEmail(email) && password.isNotBlank()) {
+        if (!busy && isValidEmail(email) && password.isNotBlank()) {
           onLogin(email.trim(), password)
         }
       },
@@ -139,7 +151,8 @@ fun LoginScreen(
       )
 
       TextButton(
-        onClick = onRegisterClick
+        onClick = onRegisterClick,
+        enabled = !busy
       ) {
         Text(
           text = "Daftar sekarang",

@@ -1,5 +1,6 @@
 package com.example.ecosnap.navigation
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,6 +9,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -20,77 +23,62 @@ import com.example.ecosnap.features.auth.CheckEmailScreen
 import com.example.ecosnap.features.auth.NewPasswordScreen
 import com.example.ecosnap.features.auth.LoginScreen
 import com.example.ecosnap.features.auth.RegisterScreen
+import com.example.ecosnap.features.auth.AuthViewModel
 
 fun NavGraphBuilder.authNavGraph(
-  navController: NavHostController
+  navController: NavHostController,
+  auth: AuthViewModel,
+  onExit: () -> Unit
 ) {
   navigation(
     route = Routes.AUTH_GRAPH,
     startDestination = Routes.LOGIN
   ) {
     composable(Routes.LOGIN) {
+      val state by auth.state.collectAsStateWithLifecycle()
       LoginScreen(
-        onBack = {
-          navController.navigate(
-            Routes.ONBOARDING
-          ) {
-            popUpTo(Routes.AUTH_GRAPH) {
-              inclusive = true
-            }
-            launchSingleTop = true
-          }
-        },
-
+        onBack = { if (!auth.state.value.busy) onExit() },
         onRegisterClick = {
-          navController.navigate(
-            Routes.REGISTER
-          )
-        },
-
-        onForgotPassword = {
-          navController.navigate(
-            Routes.FORGOT_PASSWORD
-          )
-        },
-
-        onHelp = {
-          navController.navigate(
-            Routes.HELP
-          )
-        },
-
-        onLogin = { _, _ ->
-          navController.navigate(
-            Routes.MAIN_GRAPH
-          ) {
-            popUpTo(Routes.AUTH_GRAPH) {
-              inclusive = true
-            }
-            launchSingleTop = true
+          if (!auth.state.value.busy) {
+            auth.clearError()
+            navController.navigate(Routes.REGISTER)
           }
-        }
+        },
+        onForgotPassword = {
+          if (!auth.state.value.busy) {
+            auth.clearError()
+            navController.navigate(Routes.FORGOT_PASSWORD)
+          }
+        },
+        onHelp = {
+          if (!auth.state.value.busy) navController.navigate(Routes.HELP)
+        },
+        onLogin = auth::signIn,
+        busy = state.busy,
+        error = state.error,
+        onInputChanged = auth::clearError
       )
     }
 
     composable(Routes.REGISTER) {
-      RegisterScreen(
-        onBack = {
-          navController.popBackStack()
-        },
-
-        onLoginClick = {
-          navController.popBackStack()
-        },
-
-        onHelp = {
-          navController.navigate(
-            Routes.HELP
-          )
-        },
-
-        onRegister = { _ ->
+      val state by auth.state.collectAsStateWithLifecycle()
+      val back: () -> Unit = {
+        if (!auth.state.value.busy) {
+          auth.clearError()
           navController.popBackStack()
         }
+      }
+      BackHandler(enabled = !state.busy, onBack = back)
+      RegisterScreen(
+        onBack = back,
+        onLoginClick = back,
+        onHelp = {
+          if (!auth.state.value.busy) navController.navigate(Routes.HELP)
+        },
+        onRegister = auth::register,
+        busy = state.busy,
+        error = state.error,
+        onInputChanged = auth::clearError
       )
     }
 
@@ -113,8 +101,7 @@ fun NavGraphBuilder.authNavGraph(
     composable(Routes.NEW_PASSWORD) {
       NewPasswordScreen(
         onBack = { navController.popBackStack() },
-        onHelp = { navController.navigate(Routes.HELP) },
-        onSave = { navController.popBackStack(Routes.LOGIN, false) }
+        onHelp = { navController.navigate(Routes.HELP) }
       )
     }
 

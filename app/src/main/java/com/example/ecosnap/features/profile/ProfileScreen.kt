@@ -18,6 +18,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ecosnap.core.auth.AccountProfile
+import com.example.ecosnap.features.profile.model.GreenStats
+import com.example.ecosnap.features.profile.model.UserProfile
+import java.text.NumberFormat
+import java.util.Locale
 import com.example.ecosnap.core.designsystem.theme.EcoColor
 import com.example.ecosnap.features.profile.components.GreenAchievementCard
 import com.example.ecosnap.features.profile.components.ProfileLogoutButton
@@ -31,6 +36,7 @@ import com.example.ecosnap.features.profile.model.ProfileMenuItemData
 
 @Composable
 fun ProfileScreen(
+  account: AccountProfile,
   onSettingsClick: () -> Unit,
   onProfileClick: () -> Unit,
   onEditProfileClick: () -> Unit,
@@ -69,14 +75,18 @@ fun ProfileScreen(
 
       item {
         ProfileSummaryCard(
-          userProfile = ProfileDummyData.userProfile,
+          userProfile = UserProfile(account.fullName, account.email),
           onEditProfile = onEditProfileClick
         )
       }
 
       item {
         GreenAchievementCard(
-          stats = ProfileDummyData.greenStats
+          stats = GreenStats(
+            ecoPoints = NumberFormat.getIntegerInstance(Locale.forLanguageTag("id-ID")).format(account.walletBalance),
+            totalDeposits = "—",
+            totalBadges = "—"
+          )
         )
       }
 

@@ -35,8 +35,8 @@ import java.util.Locale
 
 @Composable
 fun HomePointsCard(
-  points: Int,
-  monthlyDeposits: Int,
+  points: Long,
+  monthlyDeposits: Int?,
   onRedeem: () -> Unit,
   onSqanQr: () -> Unit,
   onFindPartner: () -> Unit,
@@ -51,7 +51,7 @@ fun HomePointsCard(
     contentPadding = PaddingValues(16.dp)
   ) {
     Text(
-      text = "Poin kebaikanmu",
+      text = "Saldo EcoPoints",
       fontSize = 13.sp,
       color = EcoColor.Green200
     )
@@ -122,7 +122,8 @@ fun HomePointsCard(
       Spacer(Modifier.width(5.dp))
 
       Text(
-        text = "$monthlyDeposits setoran baik bulan ini. Teruskan ya!",
+        text = "${monthlyDeposits ?: "—"} setoran bulan ini" +
+          if (monthlyDeposits == null) " • belum terhubung" else ". Teruskan ya!",
         fontSize = 12.sp,
         lineHeight = 16.sp,
         color = EcoColor.Green100

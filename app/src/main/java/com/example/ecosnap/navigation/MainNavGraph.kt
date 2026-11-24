@@ -28,6 +28,7 @@ import com.composables.icons.lucide.House
 import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.Map
 import com.composables.icons.lucide.ScanLine
+import com.example.ecosnap.core.auth.AccountProfile
 import com.example.ecosnap.core.designsystem.components.EcoBottomItem
 import com.example.ecosnap.core.designsystem.components.EcoBottomNavigation
 import com.example.ecosnap.core.designsystem.components.EcoButton
@@ -69,7 +70,9 @@ private val bottomItems = listOf(
 )
 
 fun NavGraphBuilder.mainNavGraph(
-  navController: NavHostController
+  navController: NavHostController,
+  account: AccountProfile,
+  onLogout: () -> Unit
 ) {
   navigation(
     route = Routes.MAIN_GRAPH,
@@ -83,7 +86,11 @@ fun NavGraphBuilder.mainNavGraph(
         selectedRoute = Routes.HOME
       ) {
         HomeScreen(
-          uiState = HomeUiState.demo(),
+          uiState = HomeUiState.demo().copy(
+            userName = account.displayName,
+            points = account.walletBalance,
+            monthlyDeposits = null
+          ),
           onNotification = {
             navController.navigate(Routes.NOTIFICATION)
           },
@@ -293,7 +300,7 @@ fun NavGraphBuilder.mainNavGraph(
 
     scanNavGraph(navController)
 
-    profileNavGraph(navController)
+    profileNavGraph(navController, account, onLogout)
 
     listOf(
       Routes.NOTIFICATION to "Notifikasi",

@@ -50,7 +50,7 @@ class MainActivity : ComponentActivity() {
         darkTheme = false,
         dynamicColor = false
       ) {
-        EcoSnapNavHost()
+        EcoSnapNavHost(onExit = { finish() })
       }
     }
   }

@@ -3,6 +3,7 @@ package com.example.ecosnap.navigation
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
+import com.example.ecosnap.core.auth.AccountProfile
 import com.example.ecosnap.features.profile.AccountSettingsScreen
 import com.example.ecosnap.features.profile.HelpCenterScreen
 import com.example.ecosnap.features.profile.ProfilePlaceholderScreen
@@ -10,7 +11,9 @@ import com.example.ecosnap.features.profile.ProfileScreen
 import com.example.ecosnap.features.profile.model.ProfileMenuItemData
 
 fun NavGraphBuilder.profileNavGraph(
-  navController: NavHostController
+  navController: NavHostController,
+  account: AccountProfile,
+  onLogout: () -> Unit
 ) {
 
   composable(Routes.PROFILE) {
@@ -19,6 +22,7 @@ fun NavGraphBuilder.profileNavGraph(
       selectedRoute = Routes.PROFILE
     ) {
       ProfileScreen(
+        account = account,
         onSettingsClick = {
           navController.navigate(
             Routes.PROFILE_ACCOUNT_SETTINGS
@@ -44,9 +48,7 @@ fun NavGraphBuilder.profileNavGraph(
             item = item
           )
         },
-        onLogoutClick = {
-          // TODO: Buat Nanti kalo udah nyambung auth
-        }
+        onLogoutClick = onLogout
       )
     }
   }

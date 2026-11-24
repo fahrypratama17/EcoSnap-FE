@@ -11,6 +11,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,6 +28,8 @@ import com.example.ecosnap.core.designsystem.components.EcoDropdownField
 import com.example.ecosnap.core.designsystem.components.EcoPasswordField
 import com.example.ecosnap.core.designsystem.components.EcoTextField
 import com.example.ecosnap.core.designsystem.theme.EcoColor
+import com.example.ecosnap.core.auth.AccountRole
+import com.example.ecosnap.core.auth.SessionOutcome
 import com.example.ecosnap.features.auth.components.AuthDivider
 import com.example.ecosnap.features.auth.components.AuthLayout
 import com.example.ecosnap.features.auth.components.AuthRoleSelector
@@ -34,6 +37,7 @@ import com.example.ecosnap.features.auth.model.AuthRole
 import com.example.ecosnap.features.auth.model.RegistrationData
 import com.example.ecosnap.features.auth.model.isValidEmail
 import com.example.ecosnap.features.auth.model.isValidPhone
+import com.example.ecosnap.features.auth.model.isValidProfileText
 
 @Composable
 fun RegisterScreen(
@@ -42,31 +46,39 @@ fun RegisterScreen(
   onHelp: () -> Unit,
   onRegister: (RegistrationData) -> Unit,
   initialRole: AuthRole = AuthRole.USER,
+  completion: SessionOutcome.NeedsProfile? = null,
+  busy: Boolean = false,
+  error: String? = null,
+  onInputChanged: () -> Unit = {},
 ) {
   var roleName by rememberSaveable {
-    mutableStateOf(initialRole.name)
+    mutableStateOf(
+      completion?.draft?.role?.let {
+        if (it == AccountRole.USER) AuthRole.USER.name else AuthRole.PARTNER.name
+      } ?: initialRole.name
+    )
   }
 
   val role = AuthRole.valueOf(roleName)
 
   var fullName by rememberSaveable {
-    mutableStateOf("")
+    mutableStateOf(completion?.draft?.fullName.orEmpty())
   }
 
   var email by rememberSaveable {
-    mutableStateOf("")
+    mutableStateOf(completion?.email.orEmpty())
   }
 
   var phone by rememberSaveable {
-    mutableStateOf("")
+    mutableStateOf(completion?.draft?.phone.orEmpty())
   }
 
   var businessName by rememberSaveable {
-    mutableStateOf("")
+    mutableStateOf(completion?.draft?.businessName.orEmpty())
   }
 
   var businessCategory by rememberSaveable {
-    mutableStateOf("")
+    mutableStateOf(completion?.draft?.businessCategory.orEmpty())
   }
 
   var password by remember { mutableStateOf("") }
@@ -76,12 +88,18 @@ fun RegisterScreen(
     mutableStateOf(false)
   }
 
+  DisposableEffect(Unit) {
+    onDispose { password = ""; confirmPassword = "" }
+  }
+
   AuthLayout(
-    onBack = onBack,
-    onHelp = onHelp
+    onBack = { if (!busy) onBack() },
+    onHelp = { if (!busy) onHelp() }
   ) {
     Text(
-      text = if (role == AuthRole.USER) {
+      text = if (completion != null) {
+        "Lengkapi profil akun"
+      } else if (role == AuthRole.USER) {
         "Buat akun Pengguna"
       } else {
         "Buat akun Mitra"
@@ -93,18 +111,24 @@ fun RegisterScreen(
     Spacer(Modifier.height(4.dp))
 
     Text(
-      text = "Untuk Anda yang ingin menggunakan layanan di EcoSnap",
+      text = if (completion != null) "Email sudah terdaftar. Lengkapi profil untuk melanjutkan."
+        else "Untuk Anda yang ingin menggunakan layanan di EcoSnap",
       style = MaterialTheme.typography.bodyMedium,
       color = EcoColor.Green700
     )
 
     Spacer(Modifier.height(20.dp))
 
+    AuthOperationStatus(busy = busy, error = error)
+
     AuthRoleSelector(
       selectedRole = role,
       onRoleSelected = { selected ->
-        roleName = selected.name
-        submitted = false
+        if (!busy) {
+          roleName = selected.name
+          submitted = false
+          onInputChanged()
+        }
       }
     )
 
@@ -112,10 +136,10 @@ fun RegisterScreen(
 
     EcoTextField(
       value = fullName,
-      onValueChange = { fullName = it },
+      onValueChange = { if (!busy) { fullName = it; onInputChanged() } },
       label = "Nama Lengkap",
       placeholder = "Masukkan nama lengkap",
-      errorMessage = if (submitted && fullName.isBlank()) "Nama lengkap wajib diisi" else null
+      errorMessage = if (submitted && !isValidProfileText(fullName, 150)) "Isi nama, maksimal 150 karakter" else null
     )
 
     Spacer(Modifier.height(12.dp))
@@ -123,19 +147,28 @@ fun RegisterScreen(
     Row(
       horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-      EcoTextField(
-        value = email,
-        onValueChange = { email = it },
-        label = "Email",
-        placeholder = "nama@gmail.com",
-        keyboardType = KeyboardType.Email,
-        modifier = Modifier.weight(1f),
-        errorMessage = if (submitted && !isValidEmail(email)) "Email tidak valid" else null
-      )
+      if (completion != null) {
+        Text(
+          text = "Email akun\n${completion.email}",
+          style = MaterialTheme.typography.bodyMedium,
+          color = EcoColor.Green900,
+          modifier = Modifier.weight(1f)
+        )
+      } else {
+        EcoTextField(
+          value = email,
+          onValueChange = { if (!busy) { email = it; onInputChanged() } },
+          label = "Email",
+          placeholder = "nama@gmail.com",
+          keyboardType = KeyboardType.Email,
+          modifier = Modifier.weight(1f),
+          errorMessage = if (submitted && !isValidEmail(email)) "Email tidak valid (maksimal 255 byte)" else null
+        )
+      }
 
       EcoTextField(
         value = phone,
-        onValueChange = { phone = it },
+        onValueChange = { if (!busy) { phone = it; onInputChanged() } },
         label = "Nomor telepon",
         placeholder = "08xxxxxxxxxx",
         keyboardType = KeyboardType.Phone,
@@ -152,25 +185,26 @@ fun RegisterScreen(
       ) {
         EcoTextField(
           value = businessName,
-          onValueChange = { businessName = it },
+          onValueChange = { if (!busy) { businessName = it; onInputChanged() } },
           label = "Nama usaha",
           placeholder = "Nama usaha",
           modifier = Modifier.weight(1f),
-          errorMessage = if (submitted && businessName.isBlank()) "Wajib diisi" else null
+          errorMessage = if (submitted && !isValidProfileText(businessName, 150)) "Isi nama usaha, maksimal 150 karakter" else null
         )
 
         EcoDropdownField(
           value = businessCategory,
-          onValueChange = { businessCategory = it },
+          onValueChange = { if (!busy) { businessCategory = it; onInputChanged() } },
           label = "Kategori usaha",
           placeholder = "Pilih kategori",
           options = listOf("Sampah Kayu", "Plastik", "Sampah Berbahaya"),
           modifier = Modifier.weight(1f),
-          errorMessage = if (submitted && businessCategory.isBlank()) "Wajib dipilih" else null
+          errorMessage = if (submitted && !isValidProfileText(businessCategory, 80)) "Pilih kategori, maksimal 80 karakter" else null
         )
       }
     }
 
+    if (completion == null) {
     Spacer(Modifier.height(12.dp))
 
     Row(
@@ -178,7 +212,7 @@ fun RegisterScreen(
     ) {
       EcoPasswordField(
         value = password,
-        onValueChange = { password = it },
+        onValueChange = { if (!busy) { password = it; onInputChanged() } },
         label = "Kata sandi",
         placeholder = "Buat kata sandi",
         modifier = Modifier.weight(1f),
@@ -187,18 +221,24 @@ fun RegisterScreen(
 
       EcoPasswordField(
         value = confirmPassword,
-        onValueChange = { confirmPassword = it },
+        onValueChange = { if (!busy) { confirmPassword = it; onInputChanged() } },
         label = "Konfirmasi kata sandi",
         placeholder = "Ulangi kata sandi",
         modifier = Modifier.weight(1f),
         errorMessage = if (submitted && confirmPassword != password) "Tidak cocok" else null
       )
     }
+    }
 
     Spacer(Modifier.height(24.dp))
 
     EcoButton(
-      text = if (role == AuthRole.USER) {
+      enabled = !busy,
+      text = if (busy) {
+        "Sedang memproses…"
+      } else if (completion != null) {
+        "Simpan profil"
+      } else if (role == AuthRole.USER) {
         "Daftar sebagai Pengguna"
       } else {
         "Daftar sebagai Mitra"
@@ -215,21 +255,23 @@ fun RegisterScreen(
       onClick = {
         submitted = true
 
-        val commonValid =
-          fullName.isNotBlank() && isValidPhone(email) && isValidPhone(phone) && password.length >= 8 && password == confirmPassword
+        val commonValid = isValidProfileText(fullName, 150) &&
+          isValidEmail(completion?.email ?: email) && isValidPhone(phone) &&
+          (completion != null || (password.length >= 8 && password == confirmPassword))
 
-        val businessValid = role == AuthRole.USER || (businessName.isNotBlank() && businessCategory.isNotBlank())
+        val businessValid = role == AuthRole.USER ||
+          (isValidProfileText(businessName, 150) && isValidProfileText(businessCategory, 80))
 
-        if (commonValid && businessValid) {
+        if (!busy && commonValid && businessValid) {
           onRegister(
             RegistrationData(
               role = role,
               fullName = fullName.trim(),
-              email = email.trim(),
+              email = completion?.email ?: email.trim(),
               phone = phone.trim(),
-              password = password,
+              password = if (completion == null) password else "",
               businessName = if (role == AuthRole.PARTNER) businessName.trim() else null,
-              businessCategory = if (role == AuthRole.PARTNER) businessCategory else null
+              businessCategory = if (role == AuthRole.PARTNER) businessCategory.trim() else null
             )
           )
         }
@@ -244,16 +286,17 @@ fun RegisterScreen(
       verticalAlignment = Alignment.CenterVertically
     ) {
       Text(
-        text = "Sudah punya akun?",
+        text = if (completion == null) "Sudah punya akun?" else "Gunakan akun lain?",
         style = MaterialTheme.typography.bodyMedium,
         color = EcoColor.Green900
       )
 
       TextButton(
-        onClick = onLoginClick
+        onClick = onLoginClick,
+        enabled = !busy
       ) {
         Text(
-          text = "Masuk",
+          text = if (completion == null) "Masuk" else "Keluar",
           color = EcoColor.Green700,
           style = MaterialTheme.typography.labelLarge
         )

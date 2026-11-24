@@ -32,9 +32,9 @@ fun ForgotPasswordScreen(onBack: () -> Unit, onHelp: () -> Unit, onContinue: () 
   var submitted by rememberSaveable { mutableStateOf(false) }
   AuthLayout(onBack = onBack, onHelp = onHelp) {
     Spacer(Modifier.height(80.dp))
-    Text("Lupa Kata Sandi", style = MaterialTheme.typography.titleLarge, color = EcoColor.Green900)
+    Text("Pratinjau Lupa Kata Sandi", style = MaterialTheme.typography.titleLarge, color = EcoColor.Green900)
     Spacer(Modifier.height(4.dp))
-    Text("Masukkan email yang terdaftar di EcoSnap. Kami akan mengirimkan tautan untuk reset kata sandi Anda", style = MaterialTheme.typography.bodyMedium, color = EcoColor.Green700)
+    Text("Ini hanya pratinjau alur reset. Tidak ada tautan yang akan dikirim dari layar ini.", style = MaterialTheme.typography.bodyMedium, color = EcoColor.Green700)
     Spacer(Modifier.height(12.dp))
     Text("Fitur reset kata sandi belum terhubung ke layanan akun.", style = MaterialTheme.typography.labelSmall, color = EcoColor.Green700)
     Spacer(Modifier.height(16.dp))
@@ -42,7 +42,7 @@ fun ForgotPasswordScreen(onBack: () -> Unit, onHelp: () -> Unit, onContinue: () 
     Spacer(Modifier.height(16.dp))
     Text("Gunakan email yang terhubung ke akun Anda", style = MaterialTheme.typography.labelSmall, color = EcoColor.Green700)
     Spacer(Modifier.height(12.dp))
-    ResetButton("Kirim Tautan Reset") { submitted = true; if (isValidEmail(email)) onContinue() }
+    ResetButton("Lihat Pratinjau Berikutnya") { submitted = true; if (isValidEmail(email)) onContinue() }
     ResetFooter()
   }
 }
@@ -56,32 +56,34 @@ fun CheckEmailScreen(onBack: () -> Unit, onHelp: () -> Unit, onContinue: () -> U
     Spacer(Modifier.height(28.dp))
     Text("Cek Email Anda", style = MaterialTheme.typography.titleLarge, color = EcoColor.Green900, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
     Spacer(Modifier.height(4.dp))
-    Text("Pratinjau: tautan reset belum dikirim. Layanan akun belum terhubung.", style = MaterialTheme.typography.bodyMedium, color = EcoColor.Green700, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+    Text("Pratinjau: tautan reset belum dikirim. Fitur reset kata sandi belum terhubung.", style = MaterialTheme.typography.bodyMedium, color = EcoColor.Green700, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
     Spacer(Modifier.height(20.dp))
-    Text("Periksa kotak masuk atau folder spam", style = MaterialTheme.typography.bodyMedium, color = EcoColor.Green700, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().border(1.dp, EcoColor.Green400, RoundedCornerShape(16.dp)).background(EcoColor.White, RoundedCornerShape(16.dp)).padding(16.dp))
+    Text("Saat fitur tersedia, tautan reset akan dikirim ke email akun.", style = MaterialTheme.typography.bodyMedium, color = EcoColor.Green700, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().border(1.dp, EcoColor.Green400, RoundedCornerShape(16.dp)).background(EcoColor.White, RoundedCornerShape(16.dp)).padding(16.dp))
     Spacer(Modifier.height(40.dp))
     ResetButton("Buka Email") {
       val intent = Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_EMAIL).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
       if (intent.resolveActivity(context.packageManager) != null) context.startActivity(intent)
     }
     Spacer(Modifier.height(12.dp))
-    Text("Belum menerima email?", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center, color = EcoColor.Green900)
-    TextButton(onClick = onBack, modifier = Modifier.align(Alignment.CenterHorizontally)) { Text("Kirim ulang tautan", color = EcoColor.Green700) }
-    TextButton(onClick = onContinue, modifier = Modifier.align(Alignment.CenterHorizontally)) { Text("Buat kata sandi baru", color = EcoColor.Green700) }
+    TextButton(onClick = onBack, modifier = Modifier.align(Alignment.CenterHorizontally)) { Text("Kembali ke pratinjau email", color = EcoColor.Green700) }
+    TextButton(onClick = onContinue, modifier = Modifier.align(Alignment.CenterHorizontally)) { Text("Pratinjau kata sandi baru", color = EcoColor.Green700) }
     ResetFooter()
   }
 }
 
 @Composable
-fun NewPasswordScreen(onBack: () -> Unit, onHelp: () -> Unit, onSave: () -> Unit) {
-  var password by rememberSaveable { mutableStateOf("") }
-  var confirmation by rememberSaveable { mutableStateOf("") }
+fun NewPasswordScreen(onBack: () -> Unit, onHelp: () -> Unit) {
+  var password by remember { mutableStateOf("") }
+  var confirmation by remember { mutableStateOf("") }
   var submitted by rememberSaveable { mutableStateOf(false) }
+  DisposableEffect(Unit) {
+    onDispose { password = ""; confirmation = "" }
+  }
   AuthLayout(onBack = onBack, onHelp = onHelp) {
     Spacer(Modifier.height(48.dp))
-    Text("Buat Kata Sandi Baru", style = MaterialTheme.typography.titleLarge, color = EcoColor.Green900)
+    Text("Pratinjau Kata Sandi Baru", style = MaterialTheme.typography.titleLarge, color = EcoColor.Green900)
     Spacer(Modifier.height(4.dp))
-    Text("Buat kata sandi yang kuat dan mudah Anda ingat untuk akun EcoSnap", style = MaterialTheme.typography.bodyMedium, color = EcoColor.Green700)
+    Text("Formulir ini belum terhubung ke reset akun. Jangan masukkan kata sandi asli.", style = MaterialTheme.typography.bodyMedium, color = EcoColor.Green700)
     Spacer(Modifier.height(20.dp))
     EcoPasswordField(value = password, onValueChange = { password = it }, label = "Kata sandi baru", placeholder = "Minimal 8 karakter", errorMessage = if (submitted && password.length < 8) "Minimal 8 karakter" else null)
     Spacer(Modifier.height(16.dp))
@@ -91,7 +93,7 @@ fun NewPasswordScreen(onBack: () -> Unit, onHelp: () -> Unit, onSave: () -> Unit
     Spacer(Modifier.height(16.dp))
     Text("Pratinjau: kata sandi belum dapat disimpan.", style = MaterialTheme.typography.labelSmall, color = EcoColor.Green700)
     Spacer(Modifier.height(8.dp))
-    ResetButton("Simpan Kata Sandi") { submitted = true }
+    ResetButton("Periksa Pratinjau") { submitted = true }
     ResetFooter()
   }
 }
