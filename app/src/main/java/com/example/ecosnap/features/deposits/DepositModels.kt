@@ -252,4 +252,34 @@ object WeightInput {
     canonicals.fold(BigDecimal.ZERO) { acc, v -> acc + BigDecimal(v) }
 
   fun withinLimit(canonicals: List<String>) = total(canonicals) <= MAX_TOTAL
+
+  private val typing = Regex("^\\d{1,4}(,\\d{0,3})?$")
+
+  /** Comma-decimal display text; an empty weight reads as 0. */
+  fun display(text: String): String = text.trim().replace('.', ',').ifEmpty { "0" }
+
+  /** Applies one keypad key ("0".."9", ",", "delete") to [current]; keys that break the format are ignored. */
+  fun enter(current: String, key: String): String {
+    val text = current.trim().replace('.', ',')
+    return when (key) {
+      "delete" -> text.dropLast(1)
+      "," -> when {
+        text.contains(',') -> text
+        text.isEmpty() -> "0,"
+        else -> "$text,"
+      }
+      else -> {
+        val next = if (text == "0") key else text + key
+        if (key.length == 1 && key[0].isDigit() && typing.matches(next)) next else text
+      }
+    }
+  }
+
+  /** Adds [delta] (plain decimal, may be negative) to [current], clamped to 0..1000 kg; zero becomes empty. */
+  fun adjust(current: String, delta: String): String {
+    val base = current.trim().replace(',', '.').trimEnd('.').ifEmpty { "0" }.toBigDecimalOrNull() ?: BigDecimal.ZERO
+    val result = (base + BigDecimal(delta)).max(BigDecimal.ZERO).min(MAX_TOTAL)
+    if (result.signum() == 0) return ""
+    return result.setScale(3, java.math.RoundingMode.HALF_UP).stripTrailingZeros().toPlainString().replace('.', ',')
+  }
 }

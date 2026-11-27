@@ -59,6 +59,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ecosnap.core.designsystem.components.EcoAppHeader
 import com.example.ecosnap.core.designsystem.components.EcoButton
 import com.example.ecosnap.core.designsystem.theme.EcoColor
+import com.example.ecosnap.core.designsystem.components.MitraBackLink
+import com.example.ecosnap.core.designsystem.components.MitraCard
+import com.example.ecosnap.core.designsystem.components.MitraInfoCard
+import com.example.ecosnap.core.designsystem.components.MitraPageTitle
+import com.example.ecosnap.core.designsystem.components.MitraSummaryCard
 import com.example.ecosnap.core.network.BackendException
 import com.example.ecosnap.features.scan.components.ScanPointsCard
 import com.google.zxing.BarcodeFormat
@@ -196,7 +201,8 @@ fun DepositDetailRoute(
   var confirmReissue by remember { mutableStateOf(false) }
 
   Column(Modifier.fillMaxSize().background(Color.White)) {
-    EcoAppHeader(onNotifications = onNotifications, onProfile = onProfile)
+    if (isPartner) MitraBackLink(onBack, Modifier.padding(start = 12.dp, top = 8.dp))
+    else EcoAppHeader(onNotifications = onNotifications, onProfile = onProfile)
     val deposit = state.deposit
     when {
       state.loading -> LoadingBox("Memuat setoran...")
@@ -206,13 +212,13 @@ fun DepositDetailRoute(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp),
       ) {
-        DepositPageTitle(
+        MitraPageTitle(
           if (isPartner) "Generate QR" else "Setoran Berhasil",
           if (isPartner) "Tunjukkan QR ini kepada pengguna" else "Setoran Anda sudah diklaim",
         )
         state.error?.let { Notice(it, error = true) }
         if (isPartner) {
-          DepositSummaryCard(DepositText.kg(deposit.totalWeightKg), deposit.totalPoints, "Poin yang akan diterima")
+          MitraSummaryCard(DepositText.kg(deposit.totalWeightKg), deposit.totalPoints, "Poin yang akan diterima")
         } else {
           ScanPointsCard(
             label = "Poin Diperoleh",
@@ -226,13 +232,13 @@ fun DepositDetailRoute(
           if (qr != null) {
             QrPanel(qr, deposit.id, onExpired = vm::refresh)
           } else if (deposit.status == "qr_issued") {
-            DepositInfoCard(
+            MitraInfoCard(
               "QR sudah pernah diterbitkan",
               "Demi keamanan, token QR tidak disimpan setelah halaman ditutup. Terbitkan ulang untuk menampilkan QR baru; QR lama langsung tidak berlaku.",
               icon = Lucide.QrCode,
             )
           } else {
-            DepositInfoCard(
+            MitraInfoCard(
               "QR belum diterbitkan",
               "Terbitkan QR lalu minta pengguna memindainya dengan aplikasi EcoSnap. Poin baru masuk setelah pengguna mengklaim.",
               icon = Lucide.QrCode,
@@ -240,12 +246,12 @@ fun DepositDetailRoute(
           }
           state.qrError?.let { Notice(it, error = true) }
         } else if (isPartner) {
-          DepositInfoCard(
+          MitraInfoCard(
             "Setoran sudah diklaim",
             "Pengguna sudah mengklaim setoran ini. QR tidak berlaku lagi dan tidak dapat diterbitkan ulang.",
           )
         }
-        DepositCard {
+        MitraCard {
           Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text("Rincian Setoran", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = EcoColor.Green900)
             if (deposit.usesDemoRates) Notice("Memakai tarif demo/simulasi, bukan nilai tukar nyata.")
@@ -340,7 +346,7 @@ private fun QrPanel(qr: IssuedQr, depositId: String, onExpired: () -> Unit) {
   val expired = remainingMs <= 0L
 
   Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
-    DepositCard(contentPadding = PaddingValues(16.dp)) {
+    MitraCard(contentPadding = PaddingValues(16.dp)) {
       Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -416,7 +422,7 @@ private fun QrPanel(qr: IssuedQr, depositId: String, onExpired: () -> Unit) {
         }
       }
     }
-    DepositInfoCard(
+    MitraInfoCard(
       title = if (expired) "QR belum diklaim" else "Peringatan keamanan",
       text = qr.warning,
       icon = Lucide.TriangleAlert,

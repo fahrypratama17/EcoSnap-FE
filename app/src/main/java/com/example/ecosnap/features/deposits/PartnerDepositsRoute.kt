@@ -34,6 +34,18 @@ import com.example.ecosnap.core.designsystem.components.EcoButton
 import com.example.ecosnap.core.designsystem.theme.EcoColor
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import com.example.ecosnap.core.designsystem.components.MitraCard
+import com.example.ecosnap.core.designsystem.components.MitraOutlinedButton
+import com.example.ecosnap.core.designsystem.components.MitraPageTitle
+import com.example.ecosnap.core.designsystem.components.MitraPill
+import com.example.ecosnap.core.designsystem.components.MitraInfoCard
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.unit.sp
+import com.composables.icons.lucide.ArrowRight
+import com.composables.icons.lucide.Lucide
+import com.composables.icons.lucide.QrCode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -144,7 +156,7 @@ private val statusFilters = listOf<Pair<String?, String>>(
 )
 
 @Composable
-fun PartnerDepositsRoute(accountUid: String, onBack: () -> Unit, onCreate: () -> Unit, onOpen: (String) -> Unit) {
+fun PartnerDepositsRoute(accountUid: String, onCreate: () -> Unit, onOpen: (String) -> Unit) {
   val vm: PartnerDepositsViewModel = viewModel(
     key = "partner-deposits-$accountUid",
     factory = PartnerDepositsViewModel.Factory(),
@@ -152,41 +164,51 @@ fun PartnerDepositsRoute(accountUid: String, onBack: () -> Unit, onCreate: () ->
   val state by vm.state.collectAsStateWithLifecycle()
   OnResume(vm) { vm.onResume() }
 
-  Column(Modifier.fillMaxSize().background(Color.White)) {
-    DepositTopBar("Setoran Mitra", onBack)
-    Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-      EcoButton("Buat Setoran Baru", onCreate, Modifier.fillMaxWidth())
-      Row(
-        Modifier.horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-      ) {
+  LazyColumn(
+    Modifier.fillMaxSize().background(Color.White),
+    contentPadding = androidx.compose.foundation.layout.PaddingValues(20.dp),
+    verticalArrangement = Arrangement.spacedBy(14.dp),
+  ) {
+    item { MitraPageTitle("Setoran & QR", "Buat setoran, terbitkan QR, dan pantau klaim pengguna") }
+    item {
+      EcoButton(
+        text = "Buat Setoran Baru",
+        onClick = onCreate,
+        modifier = Modifier.fillMaxWidth(),
+        containerColor = EcoColor.Green700,
+        endIcon = { Icon(Lucide.ArrowRight, null, Modifier.size(20.dp)) },
+      )
+    }
+    item {
+      Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         statusFilters.forEach { (value, label) ->
-          FilterChip(selected = state.status == value, onClick = { vm.selectStatus(value) }, label = { Text(label) })
+          MitraPill(label, selected = state.status == value, onClick = { vm.selectStatus(value) })
         }
       }
     }
     when {
-      state.loading -> LoadingBox("Memuat setoran...")
-      state.error != null -> ErrorBox(state.error!!, vm::retry)
-      state.items.isEmpty() -> Column(Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-        Text("Belum ada setoran.", style = MaterialTheme.typography.bodyMedium, color = EcoColor.Green700)
+      state.loading -> item { MitraLoadingCard("Memuat setoran...") }
+      state.error != null -> item { MitraErrorCard(state.error!!, vm::retry) }
+      state.items.isEmpty() -> item {
+        MitraInfoCard(
+          "Belum ada setoran",
+          if (state.status == null) "Setoran yang Anda buat akan muncul di sini."
+          else "Tidak ada setoran dengan status ini.",
+          icon = Lucide.QrCode,
+        )
       }
-      else -> LazyColumn(
-        Modifier.fillMaxSize(),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-      ) {
+      else -> {
         items(state.items, key = { it.id }) { item -> DepositRow(item) { onOpen(item.id) } }
         item {
           when {
             state.loadingMore -> Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
               CircularProgressIndicator(color = EcoColor.Green700)
             }
-            state.loadMoreError != null -> Column {
-              Text(state.loadMoreError!!, color = EcoColor.TextError, style = MaterialTheme.typography.bodyMedium)
-              TextButton(onClick = vm::loadMore) { Text("Coba lagi") }
+            state.loadMoreError != null -> Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+              Notice(state.loadMoreError!!, error = true)
+              MitraOutlinedButton("Coba lagi", vm::loadMore, Modifier.fillMaxWidth())
             }
-            state.nextCursor != null -> TextButton(onClick = vm::loadMore, modifier = Modifier.fillMaxWidth()) { Text("Muat lebih banyak") }
+            state.nextCursor != null -> MitraOutlinedButton("Muat lebih banyak", vm::loadMore, Modifier.fillMaxWidth())
           }
         }
       }
@@ -196,27 +218,30 @@ fun PartnerDepositsRoute(accountUid: String, onBack: () -> Unit, onCreate: () ->
 
 @Composable
 private fun DepositRow(item: DepositSummary, onClick: () -> Unit) {
-  Column(
-    Modifier
-      .fillMaxWidth()
-      .background(EcoColor.GreenSoft, RoundedCornerShape(16.dp))
-      .clickable(onClick = onClick)
-      .padding(14.dp),
-    verticalArrangement = Arrangement.spacedBy(4.dp),
-  ) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-      Text(
-        "${item.totalPoints} poin",
-        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-        color = EcoColor.Green900,
-      )
-      Text(DepositText.status(item.status), style = MaterialTheme.typography.bodyMedium, color = EcoColor.Green700)
+  MitraCard(onClick = onClick) {
+    Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+      Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text(
+          "${item.totalPoints} poin",
+          modifier = Modifier.weight(1f),
+          fontSize = 17.sp,
+          fontWeight = FontWeight.Bold,
+          color = EcoColor.Green800,
+        )
+        Surface(color = EcoColor.Green100, shape = RoundedCornerShape(50)) {
+          Text(
+            DepositText.status(item.status),
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
+            fontSize = 10.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = EcoColor.Green800,
+          )
+        }
+      }
+      Text(DepositText.kg(item.totalWeightKg), fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = EcoColor.Green900)
+      Text("Dibuat ${DepositText.dateTime(item.createdAt)}", fontSize = 11.sp, color = EcoColor.Green800)
+      item.claimedAt?.let { Text("Diklaim ${DepositText.dateTime(it)}", fontSize = 11.sp, color = EcoColor.Green800) }
+      if (item.usesDemoRates) Text("Tarif demo", fontSize = 11.sp, color = EcoColor.Green700)
     }
-    Text(DepositText.kg(item.totalWeightKg), style = MaterialTheme.typography.bodyMedium, color = EcoColor.Green900)
-    Text("Dibuat ${DepositText.dateTime(item.createdAt)}", style = MaterialTheme.typography.bodyMedium, color = EcoColor.Green700)
-    item.claimedAt?.let {
-      Text("Diklaim ${DepositText.dateTime(it)}", style = MaterialTheme.typography.bodyMedium, color = EcoColor.Green700)
-    }
-    if (item.usesDemoRates) Text("Tarif demo", style = MaterialTheme.typography.bodyMedium, color = EcoColor.Green700)
   }
 }

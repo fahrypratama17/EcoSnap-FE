@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -31,7 +32,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.composables.icons.lucide.Bell
 import com.composables.icons.lucide.History
 import com.composables.icons.lucide.Info
 import com.composables.icons.lucide.LogOut
@@ -40,19 +40,21 @@ import com.composables.icons.lucide.Map
 import com.composables.icons.lucide.QrCode
 import com.composables.icons.lucide.RotateCcw
 import com.composables.icons.lucide.Scale
-import com.composables.icons.lucide.UserRound
+import com.composables.icons.lucide.TriangleAlert
 import com.example.ecosnap.core.auth.AccountProfile
 import com.example.ecosnap.core.designsystem.components.EcoButton
+import com.example.ecosnap.core.designsystem.components.MitraCard
+import com.example.ecosnap.core.designsystem.components.MitraInfoCard
+import com.example.ecosnap.core.designsystem.components.MitraMenuCard
+import com.example.ecosnap.core.designsystem.components.MitraPanel
+import com.example.ecosnap.core.designsystem.components.MitraStat
 import com.example.ecosnap.core.designsystem.theme.EcoColor
-import com.example.ecosnap.features.home.components.PartnerCard
-import com.example.ecosnap.features.home.components.PartnerMenuCard
-import com.example.ecosnap.features.home.components.PartnerPanel
-import com.example.ecosnap.features.home.components.PartnerStat
 import com.example.ecosnap.features.home.model.PartnerHomeData
 
 /**
  * Partner Home: business identity from the account plus the `GET /partner/home` summary. A 403
  * `deposit_forbidden` is shown as an explanation (pending / no location), never as zero counts.
+ * Notifications and profile live in the shared app header, so they are not repeated here.
  */
 @Composable
 fun PartnerHomeRoute(
@@ -62,8 +64,6 @@ fun PartnerHomeRoute(
   onLogout: () -> Unit,
   onCreateDeposit: () -> Unit,
   onDeposits: () -> Unit,
-  onNotifications: () -> Unit,
-  onProfile: () -> Unit,
   onEstimate: () -> Unit
 ) {
   val viewModel: PartnerHomeViewModel =
@@ -87,11 +87,17 @@ fun PartnerHomeRoute(
     onLogout = onLogout,
     onCreateDeposit = onCreateDeposit,
     onDeposits = onDeposits,
-    onNotifications = onNotifications,
-    onProfile = onProfile,
     onEstimate = onEstimate
   )
 }
+
+private class PartnerMenu(
+  val title: String,
+  val description: String,
+  val action: String,
+  val icon: ImageVector,
+  val onClick: () -> Unit
+)
 
 @Composable
 fun PartnerHomeScreen(
@@ -103,11 +109,52 @@ fun PartnerHomeScreen(
   onLogout: () -> Unit,
   onCreateDeposit: () -> Unit,
   onDeposits: () -> Unit,
-  onNotifications: () -> Unit,
-  onProfile: () -> Unit,
   onEstimate: () -> Unit,
   modifier: Modifier = Modifier
 ) {
+  val statusRaw = state.data?.partnerStatus ?: account.business?.status
+  val canCreate = statusRaw == "verified"
+  val features = buildList {
+    add(
+      PartnerMenu(
+        "Kalkulator Sampah",
+        "Hitung berat sampah dan estimasi poin yang diberikan",
+        "Buka Kalkulator",
+        Lucide.Scale,
+        onEstimate
+      )
+    )
+    if (canCreate) {
+      add(
+        PartnerMenu(
+          "Generate QR",
+          "Buat setoran dan QR transaksi agar pengguna bisa mengklaim poin",
+          "Buat Setoran",
+          Lucide.QrCode,
+          onCreateDeposit
+        )
+      )
+    }
+    add(
+      PartnerMenu(
+        "Riwayat Setoran",
+        "Lihat setoran yang dibuat, QR diterbitkan, dan yang sudah diklaim",
+        "Buka Riwayat",
+        Lucide.History,
+        onDeposits
+      )
+    )
+    add(
+      PartnerMenu(
+        "Telusuri Mitra",
+        "Lihat daftar dan lokasi mitra EcoSnap",
+        "Buka Peta Mitra",
+        Lucide.Map,
+        onBrowsePartners
+      )
+    )
+  }
+
   LazyColumn(
     modifier = modifier
       .fillMaxSize()
@@ -131,9 +178,12 @@ fun PartnerHomeScreen(
       }
     }
 
+    partnerStatusNotice(statusRaw, state.depositForbidden)?.let { notice ->
+      item { MitraInfoCard(notice.title, notice.text, icon = notice.icon, error = notice.error) }
+    }
+
     item {
-      val statusRaw = state.data?.partnerStatus ?: account.business?.status
-      PartnerPanel(
+      MitraPanel(
         title = state.data?.businessName?.ifBlank { null } ?: account.business?.name ?: "Siap menerima setoran?",
         subtitle = account.business?.category?.ifBlank { null }
           ?: "Timbang sampah, hitung poin, lalu buat QR untuk pengguna.",
@@ -156,76 +206,22 @@ fun PartnerHomeScreen(
       item { RecentDepositsCard(data) }
     }
 
-    val canCreate = state.data?.partnerStatus == "verified"
     item {
       Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text("Menu Utama", fontSize = 17.sp, fontWeight = FontWeight.SemiBold, color = EcoColor.Green900)
         Spacer(Modifier.weight(1f))
-        Text(if (canCreate) "4 Fitur" else "3 Fitur", fontSize = 11.sp, color = EcoColor.Green700)
+        Text("${features.size} Fitur", fontSize = 11.sp, color = EcoColor.Green700)
       }
     }
-    item {
-      PartnerMenuCard(
-        title = "Kalkulator Sampah",
-        description = "Hitung berat sampah dan estimasi poin yang diberikan",
-        action = "Buka Kalkulator",
-        icon = Lucide.Scale,
-        onClick = onEstimate
-      )
-    }
-    if (canCreate) {
-      item {
-        PartnerMenuCard(
-          title = "Generate QR",
-          description = "Buat setoran dan QR transaksi agar pengguna bisa mengklaim poin",
-          action = "Buat Setoran",
-          icon = Lucide.QrCode,
-          onClick = onCreateDeposit
-        )
-      }
-    }
-    item {
-      PartnerMenuCard(
-        title = "Riwayat Setoran",
-        description = "Lihat setoran yang dibuat, QR diterbitkan, dan yang sudah diklaim",
-        action = "Buka Riwayat",
-        icon = Lucide.History,
-        onClick = onDeposits
-      )
-    }
-    item {
-      PartnerMenuCard(
-        title = "Telusuri Mitra",
-        description = "Lihat daftar dan lokasi mitra EcoSnap",
-        action = "Buka Peta Mitra",
-        icon = Lucide.Map,
-        onClick = onBrowsePartners
-      )
+    features.forEach { menu ->
+      item { MitraMenuCard(menu.title, menu.description, menu.action, menu.icon, menu.onClick) }
     }
 
     item {
       Text("Akun", fontSize = 17.sp, fontWeight = FontWeight.SemiBold, color = EcoColor.Green900)
     }
     item {
-      PartnerMenuCard(
-        title = "Notifikasi",
-        description = "Pantau pemberitahuan terbaru untuk akun mitra",
-        action = "Buka Notifikasi",
-        icon = Lucide.Bell,
-        onClick = onNotifications
-      )
-    }
-    item {
-      PartnerMenuCard(
-        title = "Profil & Pengaturan",
-        description = "Kelola data akun dan pengaturan aplikasi",
-        action = "Buka Profil",
-        icon = Lucide.UserRound,
-        onClick = onProfile
-      )
-    }
-    item {
-      PartnerMenuCard(
+      MitraMenuCard(
         title = "Muat Ulang Akun",
         description = "Periksa status verifikasi dan data akun terbaru",
         action = "Muat Ulang",
@@ -234,7 +230,7 @@ fun PartnerHomeScreen(
       )
     }
     item {
-      PartnerMenuCard(
+      MitraMenuCard(
         title = "Keluar",
         description = "Akhiri sesi mitra di perangkat ini",
         action = "Keluar dari Akun",
@@ -244,7 +240,7 @@ fun PartnerHomeScreen(
     }
 
     item {
-      PartnerCard {
+      MitraCard {
         Row(
           verticalAlignment = Alignment.CenterVertically,
           horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -265,6 +261,38 @@ fun PartnerHomeScreen(
   }
 }
 
+private class StatusNotice(val title: String, val text: String, val icon: ImageVector, val error: Boolean)
+
+/** Banner for every partner state that cannot create deposits; null for a verified partner. */
+private fun partnerStatusNotice(status: String?, forbidden: Boolean): StatusNotice? = when {
+  status == "verified" -> null
+  status == "suspended" -> StatusNotice(
+    "Akun mitra ditangguhkan",
+    "Pembuatan setoran dan QR dinonaktifkan sementara. Hubungi tim EcoSnap untuk informasi lebih lanjut.",
+    Lucide.TriangleAlert,
+    error = true
+  )
+  status == "rejected" -> StatusNotice(
+    "Verifikasi ditolak",
+    "Pengajuan lokasi mitra ditolak sehingga setoran dan QR belum dapat dibuat. Periksa data akun atau hubungi tim EcoSnap.",
+    Lucide.TriangleAlert,
+    error = true
+  )
+  status == "pending" -> StatusNotice(
+    "Menunggu verifikasi",
+    "Akun mitra Anda masih diverifikasi. Pembuatan setoran dan QR tersedia setelah lokasi terverifikasi.",
+    Lucide.Info,
+    error = false
+  )
+  forbidden -> StatusNotice(
+    "Ringkasan belum tersedia",
+    "Akun mitra Anda belum memiliki lokasi terverifikasi. Gunakan Muat Ulang Akun untuk memeriksa status terbaru.",
+    Lucide.Info,
+    error = false
+  )
+  else -> null
+}
+
 /** Inner summary of the PANEL MITRA card: loading, forbidden/pending, error, or real server counters. */
 @Composable
 private fun PartnerPanelSummary(state: PartnerHomeUiState, onRetry: () -> Unit) {
@@ -282,9 +310,7 @@ private fun PartnerPanelSummary(state: PartnerHomeUiState, onRetry: () -> Unit) 
         color = EcoColor.Green900
       )
       Text(
-        text = "Akun mitra Anda belum memiliki lokasi terverifikasi, atau masih menunggu verifikasi. " +
-          "Ringkasan akan muncul setelah akun diverifikasi. Gunakan tombol muat ulang akun untuk " +
-          "memeriksa status terbaru.",
+        text = "Ringkasan akan muncul setelah akun mitra memiliki lokasi terverifikasi.",
         fontSize = 11.sp,
         lineHeight = 16.sp,
         color = EcoColor.Green800
@@ -293,21 +319,13 @@ private fun PartnerPanelSummary(state: PartnerHomeUiState, onRetry: () -> Unit) 
 
     data != null -> Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
       Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        PartnerStat("Poin terklaim", data.claimedPoints.toString(), "Poin", Modifier.weight(1f))
-        PartnerStat("Berat terklaim", "${data.claimedWeightKg} kg", "Total", end = true)
+        MitraStat("Poin terklaim", data.claimedPoints.toString(), "Poin", Modifier.weight(1f))
+        MitraStat("Berat terklaim", "${data.claimedWeightKg} kg", "Total", end = true)
       }
       Row(Modifier.fillMaxWidth()) {
-        PartnerStat("Dibuat", data.created.toString(), "Setoran", Modifier.weight(1f))
-        PartnerStat("QR diterbitkan", data.qrIssued.toString(), "Setoran", Modifier.weight(1f))
-        PartnerStat("Diklaim", data.claimed.toString(), "Setoran", Modifier.weight(1f), end = true)
-      }
-      if (data.partnerStatus != "verified") {
-        Text(
-          text = "Pembuatan setoran dan QR hanya tersedia untuk lokasi terverifikasi.",
-          fontSize = 11.sp,
-          lineHeight = 15.sp,
-          color = EcoColor.Green800
-        )
+        MitraStat("Dibuat", data.created.toString(), "Setoran", Modifier.weight(1f))
+        MitraStat("QR diterbitkan", data.qrIssued.toString(), "Setoran", Modifier.weight(1f))
+        MitraStat("Diklaim", data.claimed.toString(), "Setoran", Modifier.weight(1f), end = true)
       }
     }
 
@@ -324,7 +342,7 @@ private fun PartnerPanelSummary(state: PartnerHomeUiState, onRetry: () -> Unit) 
 
 @Composable
 private fun RecentDepositsCard(data: PartnerHomeData) {
-  PartnerCard {
+  MitraCard {
     Text("Setoran terbaru", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = EcoColor.Green900)
     if (data.recentDeposits.isEmpty()) {
       Spacer(Modifier.height(4.dp))

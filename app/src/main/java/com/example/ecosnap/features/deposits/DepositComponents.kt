@@ -32,21 +32,50 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.composables.icons.lucide.ArrowLeft
-import com.composables.icons.lucide.Lucide
+import com.example.ecosnap.core.designsystem.components.EcoButton
+import com.example.ecosnap.core.designsystem.components.MitraCard
+import com.example.ecosnap.core.designsystem.components.MitraOutlinedButton
 import com.example.ecosnap.core.designsystem.theme.EcoColor
+import androidx.compose.runtime.remember
+import java.math.BigDecimal
 
+/** Inline (non-full-screen) loading state for mitra pages that already show the page title. */
 @Composable
-internal fun DepositTopBar(title: String, onBack: () -> Unit) {
-  Row(
-    Modifier.fillMaxWidth().background(EcoColor.Green100).padding(horizontal = 8.dp, vertical = 8.dp),
-    verticalAlignment = Alignment.CenterVertically,
-  ) {
-    IconButton(onClick = onBack) {
-      Icon(Lucide.ArrowLeft, contentDescription = "Kembali", tint = EcoColor.Green900)
+internal fun MitraLoadingCard(text: String) {
+  MitraCard {
+    Column(
+      Modifier.fillMaxWidth().padding(vertical = 20.dp),
+      horizontalAlignment = Alignment.CenterHorizontally,
+      verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+      CircularProgressIndicator(Modifier.size(32.dp), color = EcoColor.Green700)
+      Text(text, fontSize = 12.sp, color = EcoColor.Green800)
     }
-    Text(title, style = MaterialTheme.typography.titleMedium, color = EcoColor.Green900)
   }
+}
+
+/** Inline error state with retry and optional back actions. */
+@Composable
+internal fun MitraErrorCard(message: String, onRetry: (() -> Unit)?, onBack: (() -> Unit)? = null) {
+  MitraCard {
+    Column(
+      Modifier.fillMaxWidth().padding(vertical = 12.dp),
+      horizontalAlignment = Alignment.CenterHorizontally,
+      verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+      Text(message, fontSize = 12.sp, lineHeight = 18.sp, color = EcoColor.TextError, textAlign = TextAlign.Center)
+      if (onRetry != null) EcoButton("Coba lagi", onRetry, Modifier.fillMaxWidth(), containerColor = EcoColor.Green700)
+      if (onBack != null) MitraOutlinedButton("Kembali", onBack, Modifier.fillMaxWidth())
+    }
+  }
+}
+
+/** Sum of the valid weight rows, display only; the server stays the source of truth for points. */
+@Composable
+internal fun rememberTotalWeightText(rows: List<WeightRow>): String = remember(rows) {
+  var total = BigDecimal.ZERO
+  rows.forEach { row -> WeightInput.canonical(row.weight)?.let { total += BigDecimal(it) } }
+  total.setScale(3).toPlainString().replace('.', ',')
 }
 
 @Composable

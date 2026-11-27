@@ -33,6 +33,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ecosnap.core.designsystem.components.EcoButton
+import com.example.ecosnap.core.designsystem.components.MitraBackLink
+import com.example.ecosnap.core.designsystem.components.MitraCard
+import com.example.ecosnap.core.designsystem.components.MitraInfoCard
+import com.example.ecosnap.core.designsystem.components.MitraPageTitle
+import com.example.ecosnap.core.designsystem.components.MitraWeightHero
 import com.example.ecosnap.core.designsystem.theme.EcoColor
 import com.example.ecosnap.core.network.BackendException
 import com.example.ecosnap.core.network.PendingMutation
@@ -308,80 +313,86 @@ fun PartnerDepositCreateRoute(
     }
   }
 
-  Column(Modifier.fillMaxSize().background(Color.White)) {
-    when {
-      state.recovering || state.loadingCategories -> LoadingBox("Memuat...")
-      state.recoverError != null -> ErrorBox(state.recoverError!!, vm::recover, onBack)
-      state.categoriesError != null -> ErrorBox(state.categoriesError!!, vm::loadCategories, onBack)
-      state.completedId != null -> Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp),
-      ) {
-        DepositPageTitle("Generate QR", "Setoran sudah tercatat di server")
-        DepositCard {
-          Column(
-            Modifier.fillMaxWidth().padding(vertical = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-          ) {
-            Icon(Lucide.QrCode, null, Modifier.size(64.dp), tint = EcoColor.Green700)
-            Text("Setoran sudah dibuat", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = EcoColor.Green900)
-            Text(
-              "Setoran sudah dibuat server. Buka setoran tersebut untuk menerbitkan QR.",
-              fontSize = 12.sp,
-              lineHeight = 19.sp,
-              textAlign = TextAlign.Center,
-              color = EcoColor.Green800,
-            )
-            EcoButton("Buka Setoran", vm::openCompleted, Modifier.fillMaxWidth(), containerColor = EcoColor.Green700)
-          }
+  Column(Modifier.fillMaxSize().background(Color.White).verticalScroll(rememberScrollState())) {
+    MitraBackLink(onBack, Modifier.padding(start = 12.dp, top = 8.dp))
+    Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+      when {
+        state.recovering || state.loadingCategories -> {
+          MitraPageTitle("Buat Setoran", "Pilih kategori dan masukkan berat sampah yang ditimbang")
+          MitraLoadingCard("Memuat...")
         }
-        state.error?.let { Notice(it, error = true) }
-      }
-      else -> Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp),
-      ) {
-        DepositPageTitle("Buat Setoran", "Pilih kategori dan masukkan berat sampah yang ditimbang")
-        WeightHero(rememberTotalWeightText(state.rows))
-        DepositItemsEditor(
-          rows = state.rows,
-          categories = state.categories,
-          enabled = !state.unresolved && !state.submitting,
-          onChange = vm::change,
-          onAdd = vm::add,
-          onRemove = vm::remove,
-        )
-        Text(
-          "Maks. 1.000 kg total · 3 angka desimal · ${WeightInput.MAX_ITEMS} kategori",
-          fontSize = 10.sp,
-          color = EcoColor.Green700,
-        )
-        state.validation?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = EcoColor.TextError) }
-        state.error?.let { Notice(it, error = true) }
-        DepositInfoCard(
-          "Poin dihitung server",
-          "Tarif poin dari server dapat berupa tarif demo dan dihitung ulang saat setoran dibuat. " +
-            "Setelah QR terbit, setoran dikunci dan tidak dapat diubah.",
-        )
-        if (state.unresolved) {
-          EcoButton(
-            text = if (state.submitting) "Mengirim..." else "Kirim Ulang",
-            onClick = vm::retryUnresolved,
-            enabled = !state.submitting,
-            modifier = Modifier.fillMaxWidth(),
-            containerColor = EcoColor.Green700,
-            endIcon = { Icon(Lucide.ArrowRight, null, Modifier.size(20.dp)) },
+        state.recoverError != null -> {
+          MitraPageTitle("Buat Setoran", "Data setoran tertunda tidak dapat dibaca")
+          MitraErrorCard(state.recoverError!!, vm::recover, onBack)
+        }
+        state.categoriesError != null -> {
+          MitraPageTitle("Buat Setoran", "Kategori sampah belum dapat dimuat")
+          MitraErrorCard(state.categoriesError!!, vm::loadCategories, onBack)
+        }
+        state.completedId != null -> {
+          MitraPageTitle("Generate QR", "Setoran sudah tercatat di server")
+          MitraCard {
+            Column(
+              Modifier.fillMaxWidth().padding(vertical = 24.dp),
+              horizontalAlignment = Alignment.CenterHorizontally,
+              verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+              Icon(Lucide.QrCode, null, Modifier.size(64.dp), tint = EcoColor.Green700)
+              Text("Setoran sudah dibuat", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = EcoColor.Green900)
+              Text(
+                "Setoran sudah dibuat server. Buka setoran tersebut untuk menerbitkan QR.",
+                fontSize = 12.sp,
+                lineHeight = 19.sp,
+                textAlign = TextAlign.Center,
+                color = EcoColor.Green800,
+              )
+              EcoButton("Buka Setoran", vm::openCompleted, Modifier.fillMaxWidth(), containerColor = EcoColor.Green700)
+            }
+          }
+          state.error?.let { Notice(it, error = true) }
+        }
+        else -> {
+          MitraPageTitle("Buat Setoran", "Pilih kategori dan masukkan berat sampah yang ditimbang")
+          MitraWeightHero(rememberTotalWeightText(state.rows))
+          MitraWeightEditor(
+            rows = state.rows,
+            categories = state.categories,
+            enabled = !state.unresolved && !state.submitting,
+            onChange = vm::change,
+            onAdd = vm::add,
+            onRemove = vm::remove,
           )
-        } else {
-          EcoButton(
-            text = if (state.submitting) "Membuat..." else "Buat Setoran",
-            onClick = vm::submit,
-            enabled = !state.submitting,
-            modifier = Modifier.fillMaxWidth(),
-            containerColor = EcoColor.Green700,
-            endIcon = { Icon(Lucide.ArrowRight, null, Modifier.size(20.dp)) },
+          Text(
+            "Maks. 1.000 kg total · 3 angka desimal · ${WeightInput.MAX_ITEMS} kategori",
+            fontSize = 10.sp,
+            color = EcoColor.Green700,
           )
+          state.validation?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = EcoColor.TextError) }
+          state.error?.let { Notice(it, error = true) }
+          MitraInfoCard(
+            "Poin dihitung server",
+            "Tarif poin dari server dapat berupa tarif demo dan dihitung ulang saat setoran dibuat. " +
+              "Setelah QR terbit, setoran dikunci dan tidak dapat diubah.",
+          )
+          if (state.unresolved) {
+            EcoButton(
+              text = if (state.submitting) "Mengirim..." else "Kirim Ulang",
+              onClick = vm::retryUnresolved,
+              enabled = !state.submitting,
+              modifier = Modifier.fillMaxWidth(),
+              containerColor = EcoColor.Green700,
+              endIcon = { Icon(Lucide.ArrowRight, null, Modifier.size(20.dp)) },
+            )
+          } else {
+            EcoButton(
+              text = if (state.submitting) "Membuat..." else "Buat Setoran",
+              onClick = vm::submit,
+              enabled = !state.submitting,
+              modifier = Modifier.fillMaxWidth(),
+              containerColor = EcoColor.Green700,
+              endIcon = { Icon(Lucide.ArrowRight, null, Modifier.size(20.dp)) },
+            )
+          }
         }
       }
     }

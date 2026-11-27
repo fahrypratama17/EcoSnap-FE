@@ -18,7 +18,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import com.example.ecosnap.core.auth.AccountProfile
 import com.example.ecosnap.features.deposits.DepositDetailRoute
-import com.example.ecosnap.features.deposits.EstimateRoute
+import com.example.ecosnap.features.deposits.PartnerEstimateRoute
 import com.example.ecosnap.features.deposits.PartnerDepositCreateRoute
 import com.example.ecosnap.features.deposits.PartnerDepositsRoute
 import com.example.ecosnap.features.home.PartnerHomeRoute
@@ -41,8 +41,6 @@ fun NavGraphBuilder.partnerNavGraph(
       onLogout = onLogout,
       onCreateDeposit = { navController.navigate(Routes.PARTNER_DEPOSIT_CREATE) },
       onDeposits = { navController.navigate(Routes.PARTNER_DEPOSITS) },
-      onNotifications = { navController.navigate(Routes.NOTIFICATION) },
-      onProfile = { navController.navigate(Routes.PROFILE) },
       onEstimate = { navController.navigate(Routes.ESTIMATE) }
     )
   }
@@ -65,7 +63,6 @@ fun NavGraphBuilder.partnerNavGraph(
   partnerDestination(Routes.PARTNER_DEPOSITS, navController, Routes.PARTNER_DEPOSITS) {
     PartnerDepositsRoute(
       accountUid = account.uid,
-      onBack = { navController.popBackStack() },
       onCreate = { navController.navigate(Routes.PARTNER_DEPOSIT_CREATE) },
       onOpen = { navController.navigate(Routes.partnerDepositDetail(it)) }
     )
@@ -89,7 +86,7 @@ fun NavGraphBuilder.partnerNavGraph(
       initialItemsJson = initialItems
     )
   }
-  partnerDestination("${Routes.PARTNER_DEPOSIT_DETAIL}/{depositId}", navController, Routes.PARTNER_DEPOSITS, showHeader = false) { entry ->
+  partnerDestination("${Routes.PARTNER_DEPOSIT_DETAIL}/{depositId}", navController, Routes.PARTNER_DEPOSITS) { entry ->
     DepositDetailRoute(
       accountUid = account.uid,
       depositId = entry.arguments?.getString("depositId").orEmpty(),
@@ -100,9 +97,8 @@ fun NavGraphBuilder.partnerNavGraph(
     )
   }
   partnerDestination(Routes.ESTIMATE, navController, Routes.ESTIMATE) {
-    EstimateRoute(
+    PartnerEstimateRoute(
       accountUid = account.uid,
-      onBack = { navController.popBackStack() },
       onCreateDeposit = { items ->
         navController.currentBackStackEntry?.savedStateHandle?.set(PARTNER_DEPOSIT_DRAFT, items)
         navController.navigate(Routes.PARTNER_DEPOSIT_CREATE) { launchSingleTop = true }
